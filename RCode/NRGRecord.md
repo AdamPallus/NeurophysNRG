@@ -11,6 +11,7 @@ We use Matlab’s **stepwiselm** function, beginning with a constant model. The 
 ```r
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 filename<-"~/MATLAB/NRGRecording/bestFitLR.csv"
 d <- read.csv(filename, na.strings="NaN")
 ```
@@ -56,3 +57,26 @@ p+geom_bar(aes(x=f),data=q,stat='identity')+ylab('Count')+xlab('Model Fit')
 ```
 
 ![](NRGRecord_files/figure-html/modelcount-1.png) 
+
+From this, we see that head velocity alone is a common fit. Also prevailent are combinations including head velocity and either eye or head position. 
+
+
+```r
+s<-d %>% 
+  select(18:29) %>% #these are the count columns I made two chunks ago
+  summarise_each(funs(sum)) %>% 
+  gather('c','n',1:12)
+
+s$c<-s$c %>% 
+  as.character() %>% 
+  substr(.,start=1,stop=3) %>% #just take the first three letters 
+  as.factor(.) %>%
+  reorder(desc(s$n)) #order by count
+
+p<-ggplot(aes(y=n),data=s)+theme(axis.text.x=element_text(size=18,angle=45, hjust=1))
+p+geom_bar(aes(x=s$c),stat='identity')+xlab('Coefficient')+ylab('Count')
+```
+
+![](NRGRecord_files/figure-html/coefCounts-1.png) 
+
+Next, we show how many times each term was included in a model. Left and right head velocity shows up the most often, followed by head position and eye position. Leftward and Rightward head acceleration were each included just once and eye velocity or acceleration was not included in any models. 

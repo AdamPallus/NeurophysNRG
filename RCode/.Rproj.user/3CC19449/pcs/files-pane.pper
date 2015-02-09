@@ -1,0 +1,9 @@
+{
+    "path" : "~/nrgRecording",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

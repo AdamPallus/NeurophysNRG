@@ -1,9 +1,9 @@
 ---
 title: "Modeling Activity of Neurons from NRG recording study"
 output: 
-  html_document:
-    keep_md: true
+  word_document
 ---
+
 ##Introduction
 ##Methods
 We are attempting to find a function of the recorded eye and head movements that will predict the firing rate of the neuron during the trial. We convert the recorded spike times into a continuous function by convolving them with a Gaussian with a 15ms standard deviation to create a spike density function. We scale the spike density function so that it approximates the firing rate in spikes per second. For this analysis, we separate leftward and rightward movements to produce 12 possible predictor variables: (right/left)(eye/head)(position/velocity/acceleration), represented by the abreviations: *rhp, lhp, rep, lep, rhv, lhv, rev, lev, rha, lha, rea* and *lea*. 
@@ -12,9 +12,14 @@ We use Matlab’s **stepwiselm** function, beginning with a constant model. The 
 
 ##Results
 
+`r library(knitr)` `r opts_chunk$set(cache=FALSE,echo=FALSE)`
+
+
 ```{r load csv, cache=FALSE,message=FALSE,warning=FALSE}
+
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 filename<-"~/MATLAB/NRGRecording/bestFitLR.csv"
 d <- read.csv(filename, na.strings="NaN")
 ```
@@ -71,3 +76,24 @@ p+geom_bar(aes(x=f),data=q,stat='identity')+ylab('Count')+xlab('Model Fit')
 
 
 ```
+
+From this, we see that head velocity alone is a common fit. Also prevailent are combinations including head velocity and either eye or head position. 
+
+```{r coefCounts}
+s<-d %>% 
+  select(18:29) %>% #these are the count columns I made two chunks ago
+  summarise_each(funs(sum)) %>% 
+  gather('c','n',1:12)
+
+s$c<-s$c %>% 
+  as.character() %>% 
+  substr(.,start=1,stop=3) %>% #just take the first three letters 
+  as.factor(.) %>%
+  reorder(desc(s$n)) #order by count
+
+p<-ggplot(aes(y=n),data=s)+theme(axis.text.x=element_text(size=18,angle=45, hjust=1))
+p+geom_bar(aes(x=s$c),stat='identity')+xlab('Coefficient')+ylab('Count')
+
+```
+
+Next, we show how many times each term was included in a model. Left and right head velocity shows up the most often, followed by head position and eye position. Leftward and Rightward head acceleration were each included just once and eye velocity or acceleration was not included in any models. 
