@@ -1,0 +1,17 @@
+{
+    "contents" : "#fn<-\"~/MATLAB/NeurophysNRG/Resort/SC07Oct11Test.csv\"\nfn<-\"~/MATLAB/NeurophysNRG/Resort/SC15Sep11test.csv\"\ndd<-read.csv(fn,na.strings=\"NaN\")\n\no<-dd %>%\n  group_by(trial)%>%\n  summarize(hmax=max(max(rhv),abs(min(lhv))),fmax=max(fr),fmean=mean(fr))\n\nt<-staticBestFitLR %>%\n  select(1:6) %>%\n  rename(Rightward.Eye.Position=rep,Leftward.Eye.Position=lep,Rightward.Head.Position=rhp) %>%\n  gather('coef','b',4:6) %>%\n  group_by(Neuron) %>%\n  summarise(mm=max(b),cc=coef[b==mm])\nn<-t %>%\n  group_by(cc) %>%\n  summarize(n=n())\n\n\ntall<-d %>%\n  gather('dir.n','n',c(2,7)) %>%\n  gather('dir.s','slope',c(2,6)) %>%\n  gather('dir.i','int',c(2,5)) %>%\n  gather('dir.r','r',c(2,4)) %>%\n  gather('dir.p','p',c(2,3)) %>%\n  select(c(1,2,3,5,7,9,11))\n\ntall$dir.n<-as.character(tall$dir.n)\ntall$dir.n[tall$dir.n=='n.r']='R'\ntall$dir.n[tall$dir.n=='n.l']='L'\ntall$dir.n<-as.factor(tall$dir.n)\ntall<-rename(tall,dir=dir.n)\n\ntall<-d%>%\n  gather(key,value,-Neuron) %>%\n  extract(key,c('param','dir'),'([a-z]*)\\\\.(.)') %>%\n  spread(param,value)\n  ",
+    "created" : 1424123448912.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2692048911",
+    "id" : "CFCB8903",
+    "lastKnownWriteTime" : 1424492453,
+    "path" : "~/MATLAB/NRGStimAnalysis/R analysis/roughdraft.R",
+    "project_path" : null,
+    "properties" : {
+        "tempName" : "Untitled3"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

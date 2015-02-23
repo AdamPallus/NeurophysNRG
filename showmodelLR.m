@@ -1,5 +1,5 @@
 % function showmodel(t,lmodel,rmodel,shift)
-function showmodelLR(t,o)
+function showmodelLR(t,o,shift)
 %new version takes the table output from sdftable
 if ischar(t)
     disp(sprintf('Loading... %s',t))
@@ -12,7 +12,7 @@ end
 
 if isa(o,'table')
     %Find best left shift and model:
-    shift=o.shift(o.rsquare==max(o.rsquare));
+    shift=o.shift(o.rsquared==max(o.rsquared));
     shift=shift(1);
     model=o.m{o.shift==shift};
     clear o
@@ -22,6 +22,12 @@ elseif isa(o,'double')
     model=stepwiselm(d,'fr~1','criterion','rsquared','verbose',0,...
     'penter',0.05,'premove',0.025);
     shift=o;
+    
+elseif isa(o,'LinearModel')
+    if nargin<3
+        shift=5;
+    end
+    model=o;
 else
     error('NEED MODEL OR SHIFT NUMBER')
 end
@@ -154,12 +160,13 @@ plot(0:1/25:length(s.t.wf{SelectedTrial})/25-1/25,s.t.wf{SelectedTrial}/10,'b')
 hold on
 
 
-    if isfield(s,'realspiketimes')
+    if isvariable(s.t,'realspiketimes')
         spiketimes=s.t.realspiketimes{SelectedTrial};
         scolor=[1 1 0];
     else
         spiketimes=s.t.offlinespikes{SelectedTrial};
         scolor=[0 1 0];
+        warning('using unsorted spikes')
     end
     
     if ~isempty(spiketimes)

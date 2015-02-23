@@ -13,8 +13,10 @@ for i =1:length(possibleShifts)
     tic
     waitbar(i/length(0:10:200),progressbar)
     d=sdftableLR(r,possibleShifts(i));
+    %omit trial,t,dgs
+    d=d(:,4:end);
     m=stepwiselm(d,'fr~1','criterion','rsquared','verbose',0,...
-    'penter',0.05,'premove',0.025);
+    'penter',0.05,'premove',0.025,'upper','linear');
     shift(i)=possibleShifts(i);
     rsquared(i)=m.Rsquared.Adjusted;
     coef{i}=m.Coefficients;

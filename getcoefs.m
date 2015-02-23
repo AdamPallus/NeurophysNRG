@@ -30,5 +30,5 @@ function o=sub(coefString,t)
 if any(strcmp(t.Properties.RowNames,coefString))
     o=t(coefString,1).Estimate;
 else
-    o=0;
+    o=NaN;
 end

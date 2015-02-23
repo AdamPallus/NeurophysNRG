@@ -2,10 +2,11 @@
 %the sorted spikes data. Each .mat file corresponds to an H5 file of the
 %same name code. 
 
-%The function then uses bestFitSdf on each file, and saves the output in a
-%.mat file.
+%The function then fits the linear model fr~rhp+lhp+rep+lep to each, just
+%looking at the portions where the eyes and head are not moving. Also
+%subsets to just the gaze shift trials
 
-function saveAllSdfLR
+function findAllStatic
 try
 [filenames, filepath]=uigetfile({'Resort\*.mat'},'Select Files to Analyze',...
     'multiselect','on');
@@ -38,9 +39,9 @@ for f =1:length(filenames)
     if ~isa(b.(fn),'table')
         b.(fn)=mystruct2table(b.(fn));
     end
-    o=bestFitSdfLR(b.(fn));
+    o=bestFitStatic(b.(fn),300);
     clear b
-    savename=[fn,'-fitLR.mat'];
+    savename=[fn,'-StaticFit.mat'];
     save([filepath, savename],'o');
     clear o
     x(f)=toc(tt);
@@ -52,4 +53,39 @@ for f =1:length(filenames)
         continue
     end
 end
+
+%I give it the cell structure. It returns the best model for left and right
+
+function o= bestFitStatic(r,fixDur)
+% function [mLeft, mRight,bestLeft,bestRight]= bestFitSdf(r)
+
+possibleShifts=0:10:200;
+
+%find the best shift for the largest possible model
+progressbar=waitbar(0,'Finding Best Shift');
+r=addsdf(r,15);
+r=recalculatevels(r);
+for i =1:length(possibleShifts)
+    tic
+    waitbar(i/length(0:10:200),progressbar)
+    d=sdftableLR(r,possibleShifts(i),fixDur);
+
+    d=d(d.rhv+d.lhv+d.lev+d.rev<5,:);
+    d=d(d.dgs==1,:);
+    m=fitlm(d,'fr~lhp+rhp+lep+rep');
+    shift(i)=possibleShifts(i);
+    rsquared(i)=m.Rsquared.Adjusted;
+    coef{i}=m.Coefficients;
+    f{i}=m.Formula.char;
+    x(i)=toc;
+    estimate=mean(x)*(length(possibleShifts)-i);
+    waitbar(i/length(0:10:200),progressbar,sprintf('Time Remaining: %0.0f min %0.0f seconds',floor(estimate/60),floor(mod(estimate,60))))   
+end
+
+close(progressbar)
+
+% o=table(shift,ml,mr,'variablenames',{'shift','ml','mr'});
+o=table(shift',rsquared',f',coef','variablenames',{'shift','rsquared','f','coef'});
+
+
     
