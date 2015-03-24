@@ -1,4 +1,4 @@
-% function showmodel(t,lmodel,rmodel,shift)
+% function showmodelLR(t,lmodel,rmodel,shift)
 function showmodelLR(t,o,shift)
 %new version takes the table output from sdftable
 if ischar(t)
@@ -171,7 +171,7 @@ hold on
     
     if ~isempty(spiketimes)
        
-        plot(spiketimes, 200,'Markersize',4,'Marker','v','Linestyle','none','color',scolor);
+        plot(spiketimes, 200,'Markersize',4,'Marker','.','Linestyle','none','color',scolor);
         if length(spiketimes)>3
             smoothSize=1;
             spiketimes=smooth(spiketimes,smoothSize); %smooth for histogram
@@ -200,6 +200,13 @@ hold on
                            '  |   R^2 = %.2f, shift=%d | ',...
                            num2str(m.Coefficients.Estimate')],...
                 m.Rsquared.Ordinary,shift))
+            
+            oimage.sdf=s.t.sdf{SelectedTrial}*1500;
+            oimage.model=p(shift:end);
+            oimage.hvel=s.t.headvelocities{SelectedTrial};
+            assignin('base','t',oimage)
+            assignin('base','m',m);
+            assignin('base','rr',s.t);
 
         end
 

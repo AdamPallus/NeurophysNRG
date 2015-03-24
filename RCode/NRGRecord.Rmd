@@ -2,7 +2,7 @@
 title: "Modeling Activity of Neurons from NRG recording study"
 output:
   pdf_document:
-    fig_caption: yes
+    keep_tex: yes
 ---
 
 ##Introduction
@@ -59,6 +59,7 @@ library(xtable)
 filename<-"~/MATLAB/NeurophysNRG/bestFitLRResort.csv"
 d <- read.csv(filename, na.strings="NaN")
 r<-read.csv('peakregressions.csv')
+gs<-read.csv('~/MATLAB/NeurophysNRG/fitGSPlm.csv')
 r<-r[,2:12]
 ```
 ###Peak Firing Rate and Peak Head Velocity
@@ -86,7 +87,7 @@ The above analysis was restricted to the peak firing rate of the neuron on each 
 
 
 ```{r formulatable, results="asis"}
-tab<-xtable(d[1:20,1:4],caption='This table shows the results of a step-wise fitting procedure that with a threshold for inclusion of an increase of 0.5 in the R2')
+tab<-xtable(d[,1:4],caption='This table shows the results of a step-wise fitting procedure that with a threshold for inclusion of an increase of 0.5 in the R2')
 print(tab,comment=FALSE)
 ```
 
@@ -127,7 +128,7 @@ p+geom_bar(aes(x=f),data=q,stat='identity')+ylab('Count')+xlab('Model Fit')
 From this analysis, it appears that many different models are used, but there is a lot of similarity. 
 
 
-```{r coefCounts,warning=FALSE}
+```{r coefCounts,warning=FALSE,message=FALSE}
 
 s<-d %>% 
   select(rhv:lea) %>% 
@@ -143,7 +144,7 @@ p+geom_bar(aes(x=s$c),stat='identity')+xlab('Coefficient')+ylab('Count')
 
 
 
-```{r hvCoefs,warning=FALSE}
+```{r hvCoefs,message=FALSE,warning=FALSE}
 dd<-d %>% 
   mutate(lhv=lhv*-1,lep=lep*-1,lhp=lhp*-1) %>%
   select(rhv:lea) %>%
@@ -152,3 +153,31 @@ dd<-d %>%
 g<-ggplot(subset(dd,Coef %in% c('lhv','rhv','lhp','rhp','lep','rep')),aes(b,fill=Coef))
 g+geom_histogram(alpha=1)+facet_grid(Coef~.)+geom_vline(x=0)
 ```
+
+```{r gspdiff, message=FALSE,warning=FALSE}
+
+g<-subset(gs,rsquared>0) #gs loaded in first chunk
+tall<-g %>% gather(key,value,c(6,7,8,9,10,12))
+
+tall$key<-factor(tall$key,levels=c('rhv','lhv','rep','lep','rhp','rha'))
+qplot(value,facets=key~.,data=tall,fill=tall$gsp,binwidth=0.1)+scale_fill_discrete(name="Trial\nType")
+
+```
+
+What I did in the above figure was fit a linear model to gaze shift trials and pursuit trials individually, with the same formula and shift as determined by stepwise fit procedure. This shows that the coefficients are similar for trials of the different types. None of the differences are significant. Might want to show box plot. 
+
+Next plot I would consider doing is running the whole stepwise procedure over and allowing the shift to be anything, then comparing how the fits differ.
+
+##Discussion
+In this experiment, we examined the activity of neurons in a head movement-related area of the brainstem: the nucleus reticularis gigantocellularis (NRG).  We recorded the firing patterns of individual neurons in this region while subjects performed head-unrestrained gaze movements, which included gaze shifts and gaze pursuit. We evoked these movements using two behavioral tasks, a standard delayed gaze shift task (See: Freedman and sparks 1997, walton and freedman 2014), and a visual tracking task that subjects accomplished using a combination of smooth gaze pursuit and catch-up saccades (gaze shifts). 
+
+Including pursuit behavior in this study allows us to evaluate whether particular inputs to the region are driving the head movements we observe. The activity of the superior colliculus (SC) is well documented during head unrestrained gaze shifts. During such movements, the deeper layers of the SC has been shown to encode a gaze displacement signal, which correlates with the amplitude of the gaze shift without regard for the combination of eye and head movements that are used to execute it. This implies that regions downstream from the SC transform this gaze amplitude information into appropriate eye and head motor commands. The NRG has been proposed as a region that could perform this transformation for the head movement portion of gaze shifts, based on the monosynaptic connections between the SC and NRG and the NRG to neck motor neurons in the brain stem, in addition to the observed head rotation evoked by stimulation of NRG. Such a hypothesis predicts that the activity of NRG is related to the head movement during gaze shifts. Our results show that many neurons in NRG do have activity that is well correlated with head velocity during gaze shifts. 
+
+During the visual tracking task, neural activity is also correlated with head velocity.  This activity is unlikely to be a result of input from the SC, which is not involved in generating the smooth gaze movements seen during pursuit. SC activity is likely to be responsible for producing catch-up gaze shifts, but these are small amplitude movements that would not be associated with the large head movements observed during pursuit. This suggests that input from a region other than the SC is responsible for the head velocity-related activity observed in the NRG. This input could come from gaze pursuit pathways, such as the FEF/MT-> NRTP/DLPN-> Cerebellum-> brainstem pathway that has been shown to be involved in both smooth pursuit eye movements and head-unrestrained gaze pursuit. It has been proposed that a head-velocity command could be generated from this pathway (Ackerly and Barnes 2011), so the NRG could represent a convergence of the gaze shift and pursuit pathways. 
+
+Several lines of evidence demonstrate that gaze amplitude alone is insufficient to determine the head movement associated with a gaze shift. Information about the initial positions of the eyes in the orbits is also required to generate the appropriate head amplitude. We find evidence of eye position-related activity in a portion of the neurons we recorded. We hypothesize that this represents monitoring of the position of the eyes, rather than evidence that the NRG is responsible for generating eye movements. With this information available, the NRG
+
+We have recently shown (Pallus and Freedman 2015) that head movements during pursuit are influenced by both the velocity of the target and the position of the target relative to the head, which can be determined using the positions of the eyes in the orbits. This conclusion is inconsistent with models of gaze pursuit that derive a head movement command from the gaze pursuit pathway, since desired gaze pursuit velocity is independent of the position of the target.  However, the eye position-related signals we find in this region of the NRG could allow it to generate the appropriate head commands by combining these position-related signals with the velocity-related signals from the pursuit pathway. 
+
+
+Although we found that the activity of cells in our data set were correlated with head velocity regardless of the behavior task, we also observed differences in the relationship between firing rate and head velocity. In some individual cells, the difference was obvious,  but statistical tests revealed significant differences in many of our cells. This is difficult to explain given the assumption that activity in NRG is responsible for driving head movements. One possibility is that the cells are sensitive to an aspect of head movement that is different between movement types. In our modeling analysis, we considered head position, velocity and acceleration, but were unable to account for the observed differences. We also allowed for the possibility that eye movements  could be responsible for the differences, but found that neither eye position, velocity nor acceleration could account for the differences. Instead, we find that the sensitivity to head velocity of a subset of our neurons  is higher on trials requiring visual tracking compared to the delayed gaze shift task. 

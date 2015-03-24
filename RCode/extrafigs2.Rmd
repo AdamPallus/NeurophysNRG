@@ -1,0 +1,228 @@
+---
+title: "NRG Additional Figures"
+output:
+  html_document:
+    keep_md: yes
+---
+#Results
+We isolated 163 neurons (94 from S and 69 from U) in NRG while monkeys performed head-unrestrained gaze shifts and gaze pursuit tasks. We chose 51 of these neurons for further analysis in this report, based on apparent head-movement-related activity as perceived by the researchers during recording, and the recording of at least 50 successful trials while isolation was maintained. The behavior tasks that our monkeys performed provided us with a large variety of head movements to investigate. Controlling initial eye position provided us with examples of pursuit and gaze shifts of similar velocities and amplitudes with varying amounts of head contribution. This provided us with the ability to identify neurons with head-related activity during recording. For offline analysis, we can compare the firing rate of the neurons to the actual head and eye kinematics on a trial-by-trial basis. While our focus was on horizontal movements, we recorded the vertical positions of the gaze, eyes and head at all times. 
+
+```{r load csv, cache=FALSE,message=FALSE,warning=FALSE,echo=FALSE}
+#in this chunk we load the required libraries and import the .csv files containing the data output from our Matlab analyses. 
+library(knitr)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(xtable)
+filename<-"~/MATLAB/NeurophysNRG/bestFitLRResort.csv"
+d <- read.csv(filename, na.strings="NaN")
+r<-read.csv('peakregressions.csv')
+gs<-read.csv('~/MATLAB/NeurophysNRG/fitGSPlm.csv')
+r<-r[,2:12]
+p<-read.csv('~/MATLAB/NeurophysNRG/peakAnalysis.csv',na.strings="NaN")
+source('~/MATLAB/NeurophysNRG/RCode/StatSmoothFunc.R') #function to add formula to regression
+```
+
+Since we have preselected our neurons based on apparent task-related activity, we first look for evidence that the rate of activity is correlated with the velocity of head movements. In the following figure, we plot the peak velocity of the head (negative values indicate that the fastest head movement was leftward), and the peak discharge rate of the cell during each trial. We show data observed during all trial types. For pursuit trials, we restrained our search for the peak values to the first trajectory only, to avoid including effects from vertical or oblique movements. 
+
+
+```{r peakAnalysisDUMP,fig.width=9, fig.height=44,echo=FALSE}
+qplot(head_peak,maxsdf*1400,data=p)+
+  facet_wrap(~Neuron,ncol=3)+
+  ylab('Peak Firing Rate (spikes/s)')+
+  xlab('Peak Head Velocity (deg/s)')
+  
+```
+
+From the figure above, it is apparent that we have a heterogenious sample of neurons. The peak firing rate of many cells never exceeds 200 spikes/s, while some have a peak firing rate greater than 400 spikes/s. There seem to be correlations between the peak head velocity and peak firing rate in many neurons, and this correlation appears to be directionly selective. 
+
+For our first statistical test, we use linear regression to find the relationship between peak head velocity and peak firing rate for each neuron. We fit leftward and rightward movements using separate models. In the figure below, we show an example cell demonstrating this process. Panel 1A shows the head velocity and corresponding activity of the neuron during a fast, leftward head movement, while 1B shows the same during a slower head movement. For each trial, we record the peak head velocity and the peak firing rate of the neuron, which are plotted in 1C. We fit a linear regression model for the relationship between peak firing rate and peak velocity in each direction. For the example neuron shown in 1C, this regression was significant (p<0.001) for leftward movements only. 
+
+![Example of correlation between peak head velocity and peak firing rate.](Example1sc21dec11.png)
+
+
+```{r Signficance,echo=FALSE}
+#In this chunk, we're doing statistical tests to identify cells with signficant correlations between peak head velocity and peak firing rate (p values stored in p.right and p.left). We are also identifying cells with an effect of trial type (noticing if the slope or intercept is significant for the interaction). 
+p$isgs<-as.factor(p$isgs)
+levels(p$isgs)<-c('Pursuit','Gaze Shift')
+p %>%
+  group_by(Neuron) %>%
+  do(p.right=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak>20)))$coefficients[8],
+     p.left=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak< -20)))$coefficients[8],
+     p.left.slope=
+       summary(lm(maxsdf ~ head_peak*isgs,data=filter(.,head_peak< -20)))$coefficients[16],
+     p.left.int=
+       summary(lm(maxsdf ~ head_peak*isgs,data=filter(.,head_peak< -20)))$coefficients[15],
+     p.right.slope=
+       summary(lm(maxsdf ~ head_peak*isgs,data=filter(.,head_peak>20)))$coefficients[16],
+     p.right.int=
+       summary(lm(maxsdf ~ head_peak*isgs,data=filter(.,head_peak>20)))$coefficients[15]) ->
+  mm
+
+pp<-merge(mm,p,by="Neuron")
+
+n.total<-length(unique(pp$Neuron))
+
+n.left<-length(unique(pp[pp$p.left<0.001,]$Neuron))
+n.left.slope<-length(unique(pp[pp$p.left.slope<0.001,]$Neuron))
+n.left.int<-length(unique(pp[pp$p.left.int<0.001,]$Neuron))
+n.left.either<-length(unique((pp[pp$p.left<0.001&(pp$p.left.slope<0.001 | pp$p.left.int<0.001),]$Neuron)))
+
+#n.left.either<-length(unique(filter(pp,p.left<0.001,p.left.slope<0.001 | p.left.int<0.001)))
+
+n.right<-length(unique(pp[pp$p.right<0.001,]$Neuron))
+n.right.slope<-length(unique(pp[pp$p.right.slope<0.001,]$Neuron))
+n.right.int<-length(unique(pp[pp$p.right.int<0.001,]$Neuron))
+n.right.either<-length(unique((pp[pp$p.right<0.001&(pp$p.right.slope<0.001 | pp$p.right.int<0.001),]$Neuron)))
+
+n.both<-length(unique(pp[pp$p.left<0.001&pp$p.right<0.001,]$Neuron))
+n.both.slope<-length(unique(pp[pp$p.left<0.001&pp$p.right<0.001,]$Neuron))
+n.both.int<-length(unique(pp[pp$p.left<0.001&pp$p.right<0.001,]$Neuron))
+
+
+
+
+
+```
+In the figure below, we plot the `r n.left` neurons with significant leftward regressions, followed by the `r n.right` cells with signficant rightward regressions. We found that `r n.both` cells had signficant regressions in both directions.
+
+```{r leftRegressions, fig.width=9,fig.height=24}
+#In this figure, we're showing all the cells with significant regressions for leftward movements
+qplot(head_peak,maxsdf*1400,
+      data=filter(pp,head_peak< -20,p.left<0.001))+
+  facet_wrap(~Neuron,ncol=2)+stat_smooth(method='lm',col='black')+
+  stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=0.3,size=4)+
+  theme_bw()+
+  ylab('Peak Firing Rate (spikes/s)')+
+  xlab('Peak Head Velocity (deg/s)')
+```
+
+```{r rightRegressions, fig.width=9,fig.height=24}
+#In this figure, we're showing all the cells with significant regressions for rightward movements
+qplot(head_peak,maxsdf*1400,
+      data=filter(pp,head_peak > 20,p.right<0.001))+
+  facet_wrap(~Neuron,ncol=2)+stat_smooth(method='lm',col='black')+
+  stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=-0.2,size=4)+
+  theme_bw()+
+  ylab('Peak Firing Rate (spikes/s)')+
+  xlab('Peak Head Velocity (deg/s)')
+```
+
+Of the cells with significant regressions for all head movements, we further tested for the significance of the type of task that was used to elicit the head movements on this relationship. We fit the model $$Fr_{peak} = x_{0}+x_{1} H_{peak}+x_{2} T_{type}+x_{3} H_{peak}*T_{type},$$ where $Fr_{peak}$ is the peak firing rate, $H_{peak}$ is the peak head velocity, and $T_{type}$ is the task  (delayed gaze shift or head-unrestrained pursuit) that was required during each trial,and the $*$ indicates an interaction between the two parameters. A significant $x_{2}$ term indicates a difference in the intercepts for the relationship between peak head velocity and peak firing rate for the trial types, while a significant $x_{3}$ term indicates a difference in slope between the two.  
+
+In the figures below, we plot data from the  `r n.left.either` cells with significant effects of the task type on either the slope or intercept of the fit for leftward head movements, followed by the `r n.right.either` cells significant during rightward movements.
+
+
+```{r gspsLeftward,fig.width=9,fig.height=7}
+
+qplot(head_peak,maxsdf*1400,col=isgs,
+      data=filter(pp,head_peak< -20,p.left<0.001,p.left.slope<0.001 | p.left.int<0.001))+
+  facet_wrap(~Neuron,ncol=3)+stat_smooth(method='lm')+
+  ylab('Peak Firing Rate (spikes/s)')+
+  xlab('Peak Head Velocity (deg/s)')+
+  theme_bw()+
+  scale_colour_grey(start = 0, end = .7,name='Task Type')+
+  theme(legend.position='bottom')
+
+```
+
+```{r gspsRightward,fig.width=9,fig.height=11}
+qplot(head_peak,maxsdf*1400,col=isgs,
+      data=filter(pp,head_peak> 20,p.right<0.001,p.right.slope<0.001 | p.right.int<0.001))+
+  facet_wrap(~Neuron,ncol=3)+stat_smooth(method='lm')+
+  ylab('Peak Firing Rate (spikes/s)')+
+  xlab('Peak Head Velocity (deg/s)')+
+  theme_bw()+
+  scale_colour_grey(start = 0, end = .7,name='Task Type')+
+  theme(legend.position='bottom')
+```
+
+Following the methods described above (see Methods: Modeling), for each cell, we generated a model to predict the firing rate of the neuron in terms of eye and head position, velocity and acceleration. Each model includes only terms that increase the R^2^ of the model by 0.05 or more. When describing velocity and position, we typically use negative values to indicate leftward, but for these models, we treat leftward and rightward values as separate variables. The table below shows the resulting best model for each cell, the shift, or latency between neural activity and behavior that provides the best model (measured by R^2^) and the R^2^ of the resulting model compared to the real neural activity.
+
+```{r formulatable}
+tab<-xtable(d[,1:4],caption='This table shows the results of a step-wise fitting procedure that with a threshold for inclusion of an increase of 0.5 in the R2')
+#print(tab,comment=FALSE)
+kable(d[,1:4],digits=2,align='l')
+```
+
+
+Breaking down the results shown in the above table, first we show the number of times each variable appears in any of the the final models.
+
+```{r coefCounts,warning=FALSE,message=FALSE,echo=FALSE}
+
+s<-d %>% 
+  select(rhv:lea) %>% 
+  mutate_each(funs(!is.na(.))) %>%
+  summarise_each(funs(sum)) %>% 
+  gather('c','n',1:12) %>%
+  mutate(c=reorder(c,desc(n)))
+
+p<-ggplot(aes(y=n),data=s)
+p+geom_bar(aes(x=s$c),stat='identity')+xlab('Variable')+ylab('Count')+
+  theme_bw()+
+  theme(axis.text.x=element_text(size=18,angle=45, hjust=1))
+
+```
+
+It is clear that leftward and rightward head velocity are included more than any other varaibles, but we also see influence of head and eye position in several models. Only one model was improved significantly by the inclusion of head acceleration.
+
+Because head position and eye position are often correlated, we investigate this position-related activity further by isolating the periods of fixation before and after gaze shifts. We fit each cell with a position term included in the stepwise fit above with the model: 
+
+$$Fr = x_{0}+x_{1}H_{R}+x_{2}E_{R}+x_{3}H_{L}+x_{4}E_{L}$$
+
+In the table below, for each neuron, we show the coefficient ($x_{1-4}$) with the greatest value using this method.
+
+```{r staticTable,echo=FALSE}
+staticBestFitLR <- read.csv("~/MATLAB/NeurophysNRG/Resort/staticBestFitLR.csv", na.strings="NaN")
+
+staticBestFitLR %>%
+  select(1:6) %>%
+  rename(Rightward.Eye=rep,Leftward.Eye=lep,Rightward.Head=rhp) %>%
+  gather('coef','b',4:6) %>%
+  group_by(Neuron) %>%
+  summarise(Coeficient=max(b),Position.Type=coef[b==Coeficient]) %>%
+  arrange(desc(Coeficient))-> t
+kable(t,digits=2,align='c')
+```
+
+
+The box plot below compares the coefficients for head velocity obtained through linear regression on gaze shift and pursuit trials. We fit each subset individually, using the same formula obtained from applying the stepwiselm function to the entire set.
+
+```{r gspdiff, message=FALSE,warning=FALSE}
+
+g<-subset(gs,rsquared>0) #gs loaded in first chunk
+tall<-g %>% gather(key,value,c(6,7,8,9,10,12))
+
+#tall$key<-factor(tall$key,levels=c('rhv','lhv','rep','lep','rhp','rha'))
+#qplot(value,facets=key~.,data=tall,fill=tall$gsp,binwidth=0.1)+scale_fill_discrete(name="Trial\nType")
+
+tall<-g %>% gather(key,value,c(6,7))
+#qplot(value,facets=key~.,data=tall,fill=tall$gsp,binwidth=0.1)+scale_fill_discrete(name="Trial\nType")
+
+qplot(key,value,data=tall,geom='boxplot',fill=gsp)+
+  scale_fill_grey(start=0)+
+  theme_bw()+
+  theme(legend.position = "bottom")
+```
+
+The plots below show the difference in the fit coefficients for leftward and rightward movements. paired t-tests accompany.
+
+```{r ttestovgsps}
+g %>% 
+  select(1,5,6) %>% 
+  spread(gsp,rhv) %>% 
+  mutate(rhv=ps-gs)-> rdiff
+g %>% 
+  select(1,5,7) %>% 
+  spread(gsp,lhv) %>% 
+  mutate(lhv=ps-gs)-> ldiff
+
+rd<-t.test(rdiff$rhv)
+ld<-t.test(ldiff$lhv)
+qplot(ldiff$lhv,binwidth=0.1)+geom_vline(x=ld$estimate,size=2)
+ld
+qplot(rdiff$rhv,binwidth=0.1)+geom_vline(x=rd$estimate,size=2)
+rd
+
+
+```

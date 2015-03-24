@@ -9,5 +9,5 @@ end
 gazeshift=[];
     spmaxfr=findmaxfr(r,smoothnum,starttime,stoptime);
     gazeshift=cellfun(@(x) strcmp(x,'Adam_Delay01'),r.ttype);
-    r.spmaxfr=spmaxfr;
+    r.spmaxfr=spmaxfr';
     r.gazeshift=gazeshift;

@@ -1,0 +1,119 @@
+---
+title: "NRGFigs"
+output:
+  pdf_document:
+    keep_tex: yes
+---
+```{r load csv, cache=FALSE,message=FALSE,warning=FALSE,fig.cap='Table 1: Regression results from fitting method for each neuron'}
+library(knitr)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(xtable)
+filename<-"~/MATLAB/NeurophysNRG/bestFitLRResort.csv"
+d <- read.csv(filename, na.strings="NaN")
+r<-read.csv('peakregressions.csv')
+gs<-read.csv('~/MATLAB/NeurophysNRG/fitGSPlm.csv')
+r<-r[,2:12]
+```
+
+```{r formulatable, results="asis"}
+ptab<-subset(d,d$rsquared>0)
+tab<-xtable(ptab[,1:4],caption='This table shows the results of a step-wise fitting procedure that with a threshold for inclusion of an increase of 0.5 in the R2')
+print(tab,comment=FALSE)
+```
+
+```{r coefCounts,warning=FALSE,message=FALSE}
+
+s<-d %>% 
+  select(rhv:lea) %>% 
+  mutate_each(funs(!is.na(.))) %>%
+  summarise_each(funs(sum)) %>% 
+  gather('c','n',1:12) %>%
+  mutate(c=reorder(c,desc(n)))
+
+p<-ggplot(aes(y=n),data=s)+theme(axis.text.x=element_text(size=18,angle=45, hjust=1))
+p+geom_bar(aes(x=s$c),stat='identity')+xlab('Coefficient')+ylab('Count')
+
+```
+
+```{r staticTable,results='asis'}
+staticBestFitLR <- read.csv("~/MATLAB/NeurophysNRG/Resort/staticBestFitLR.csv", na.strings="NaN")
+
+staticBestFitLR %>%
+  select(1:6) %>%
+  rename(Rightward.Eye=rep,Leftward.Eye=lep,Rightward.Head=rhp) %>%
+  gather('coef','b',4:6) %>%
+  group_by(Neuron) %>%
+  summarise(Coef=max(b),Position.Type=coef[b==Coef]) %>%
+  arrange(desc(Coef))-> t
+caption.static<-'Coefficient of Static Acitivy. This table shows the fit value for the position parameter that provided the greatest contribution to the model fr ~ rhp+lhp+rep+lep. Only cells that included a position parameter in the stepwise fit outcome are included.'
+static.table<-xtable(t)
+print(static.table,comment=FALSE)
+```
+
+```{r gspdiff, message=FALSE,warning=FALSE}
+
+g<-subset(gs,rsquared>0) #gs loaded in first chunk
+tall<-g %>% gather(key,value,c(6,7,8,9,10,12))
+
+#tall$key<-factor(tall$key,levels=c('rhv','lhv','rep','lep','rhp','rha'))
+#qplot(value,facets=key~.,data=tall,fill=tall$gsp,binwidth=0.1)+scale_fill_discrete(name="Trial\nType")
+
+tall<-g %>% gather(key,value,c(6,7))
+#qplot(value,facets=key~.,data=tall,fill=tall$gsp,binwidth=0.1)+scale_fill_discrete(name="Trial\nType")
+
+qplot(key,value,data=tall,geom='boxplot',fill=gsp)+
+  scale_fill_grey(start=0)+
+  theme_bw()+
+  theme(legend.position = "bottom")
+```
+
+```{r ttestovgsps,results='asis'}
+g %>% 
+  select(1,5,6) %>% 
+  spread(gsp,rhv) %>% 
+  mutate(rhv=ps-gs)-> rdiff
+g %>% 
+  select(1,5,7) %>% 
+  spread(gsp,lhv) %>% 
+  mutate(lhv=ps-gs)-> ldiff
+
+rd<-t.test(rdiff$rhv)
+ld<-t.test(ldiff$lhv)
+qplot(ldiff$lhv,binwidth=0.1)+geom_vline(x=ld$estimate,size=2)
+qplot(rdiff$rhv,binwidth=0.1)+geom_vline(x=rd$estimate,size=2)
+
+
+```
+
+```{r peakAnalysis,fig.width=7, fig.height=33}
+p<-read.csv('~/MATLAB/NeurophysNRG/peakAnalysis.csv',na.strings="NaN")
+source('~/MATLAB/NeurophysNRG/RCode/StatSmoothFunc.R')
+qplot(head_peak,maxsdf*1400,data=subset(p,head_peak>0))+
+  facet_wrap(~Neuron,ncol=2)+
+  stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=0)+stat_smooth(method='lm')
+```
+
+```{r gspsAnalysis}
+p$isgs<-as.factor(p$isgs)
+p %>%
+  group_by(Neuron) %>%
+  do(p.right=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak>20)))$coefficients[8],
+     p.left=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak< -20)))$coefficients[8],
+     p.left.slope=
+       summary(lm(maxsdf ~ head_peak*isgs,data=filter(.,head_peak< -20)))$coefficients[16],
+     p.left.int=
+       summary(lm(maxsdf ~ head_peak*isgs,data=filter(.,head_peak< -20)))$coefficients[15],
+     p.right.slope=
+       summary(lm(maxsdf ~ head_peak*isgs,data=filter(.,head_peak>20)))$coefficients[16],
+     p.right.int=
+       summary(lm(maxsdf ~ head_peak*isgs,data=filter(.,head_peak>20)))$coefficients[15]) ->
+  mm
+
+pp<-merge(mm,p,by="Neuron")
+
+qplot(head_peak,maxsdf*1400,col=isgs,data=filter(pp,head_peak> 20,p.right<0.001,p.right.slope<0.001 | p.right.int<0.001))+facet_wrap(~Neuron,ncol=3)+stat_smooth(method='lm')+stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=0)
+
+qplot(head_peak,maxsdf*1400,col=isgs,data=filter(pp,head_peak< -20,p.left<0.001,p.left.slope<0.001 | p.left.int<0.001))+facet_wrap(~Neuron,ncol=3)+stat_smooth(method='lm')+stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=0)
+```

@@ -43,7 +43,7 @@ variablenames={'trial','t','dgs','fr','rhp','lhp','rhv','lhv','rha','lha','rep',
 d=table(trial',t',dgs',sdf',hp',hp',hv',hv',ha',ha',ep',ep',ev',ev',ea',ea',...
     'variablenames',variablenames);
 d.rhp(d.rhp<0)=0;
-d.lhp(d.lhp>0)=0;d.hlp=d.lhp*-1;
+d.lhp(d.lhp>0)=0;d.lhp=d.lhp*-1;
 d.rep(d.rep<0)=0;
 d.lep(d.lep>0)=0;d.lep=d.lep*-1;
 d.rhv(d.rhv<0)=0;
