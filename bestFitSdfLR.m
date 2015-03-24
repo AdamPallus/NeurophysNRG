@@ -39,5 +39,6 @@ end
 close(progressbar)
 
 % o=table(shift,ml,mr,'variablenames',{'shift','ml','mr'});
-o=table(shift',rsquared',f',coef','variablenames',{'shift','rsquared','f','coef'});
+neuron=repmat(r.Neuron(1),size(shift));
+o=table(neuron',shift',rsquared',f',coef','variablenames',{'Neuron','shift','rsquared','f','coef'});
 

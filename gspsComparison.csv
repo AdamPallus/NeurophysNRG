@@ -1,0 +1,3 @@
+Neuron,shift,rsquared,f,gsp,rhv,lhv,rep,lep,rha,lha,rhp,lhp,rev,lev,rea,lea,uhv,dhv,uep,dep,uha,dha,uhp,dhp,uev,dev,uea,dea,ttype
+SB10Oct11,100,0.675251334185062,fr ~ 1 + rhv + lep + rev,gs,0.688417070695456,NaN,NaN,-1.6485556776391,NaN,NaN,NaN,NaN,0.163754955813177,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+SB10Oct11,100,0.510334893065376,fr ~ 1 + rhv + rep,ps,0.949223048538218,NaN,2.79442242033383,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
