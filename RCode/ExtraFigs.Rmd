@@ -117,3 +117,4 @@ qplot(head_peak,maxsdf*1400,col=isgs,data=filter(pp,head_peak> 20,p.right<0.001,
 
 qplot(head_peak,maxsdf*1400,col=isgs,data=filter(pp,head_peak< -20,p.left<0.001,p.left.slope<0.001 | p.left.int<0.001))+facet_wrap(~Neuron,ncol=3)+stat_smooth(method='lm')+stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=0)
 ```
+

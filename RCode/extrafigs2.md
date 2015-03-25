@@ -152,111 +152,47 @@ Breaking down the results shown in the above table, first we show the number of 
 
 ![](extrafigs2_files/figure-html/coefCounts-1.png) 
 
-It is clear that leftward and rightward head velocity are included more than any other varaibles, but we also see influence of head and eye position in several models. Only one model was improved significantly by the inclusion of head acceleration.
+It is clear that leftward and rightward head velocity are included more than any other varaibles, but we also see influence of head and eye position in several models. Only one model was improved significantly by the inclusion of head acceleration. In the figure below, we compare the model prediction of firing rate with the actual firing rate for one neuron. The model for this neuron uses a latency of 130 ms and predicts firing rate with an R^2^ of 0.47 using only leftward head velocity. The stepwise fit procedure did not find any single term that would improve the R^2^ by 0.05 or more, yet the model systematically underestimates firing rate during the gaze shift and overestimates firing rate during the pursuit task. This is consistent with the previous observation that the relationship between peak firing rate and peak head velocity was significantly different between tasks types for this neuron. 
 
-Because head position and eye position are often correlated, we investigate this position-related activity further by isolating the periods of fixation before and after gaze shifts. We fit each cell with a position term included in the stepwise fit above with the model: 
+![ModelGSPSExample](ModelDemoSC23Sep11.png)
+
+Below, we show the model prediction for a neuron that includes a significant eye position term. In the left panels, the eyes begin the trials in the center of the orbits, while in the right panels, the eyes begin deviated to the right in the orbits. The increased firing during fixation in this position is predicted by the eye position term in the model. Similarly, after the gaze shift, the firing rate is also elevated, corresponding with the eccentric eye position.
+
+![ModelPositionExample](ModelDemoSB21Oct11.png)
+
+Because head position and eye position are often correlated, it may be possible to model activity equally well using either as a single parameter in the model, particularly for models with low R^2^ values. We investigate this position-related activity further by isolating the periods of fixation before and after gaze shifts. We then fit the activity of each of the cells that included a position term in the stepwise fit above with the model: 
 
 $$Fr = x_{0}+x_{1}H_{R}+x_{2}E_{R}+x_{3}H_{L}+x_{4}E_{L}$$
 
 In the table below, for each neuron, we show the coefficient ($x_{1-4}$) with the greatest value using this method.
 
 
-  Neuron      Coeficient    Position.Type  
------------  ------------  ----------------
- UB21dec11       7.97        Leftward.Eye  
- SB28Sep11       2.49       Rightward.Head 
- SB21Oct11       2.07       Rightward.Eye  
- SC18Oct11       1.11       Rightward.Head 
- SB10Oct11       0.97       Rightward.Eye  
- SC28Nov11       0.95       Rightward.Eye  
- UB05jan12       0.87       Rightward.Head 
- SC16Sep11       0.74       Rightward.Eye  
- UB28sep11       0.69       Rightward.Head 
- SC07Oct11       0.48       Rightward.Head 
- UC17feb12       0.47       Rightward.Head 
- UC03jan12       0.44       Rightward.Eye  
- UB23mar12       0.40       Rightward.Head 
+  Neuron      rsquared    Highest.Coefficient    Position.Type  
+-----------  ----------  ---------------------  ----------------
+ UB21dec11      0.95             7.97             Leftward.Eye  
+ SB21Oct11      0.84             2.07            Rightward.Eye  
+ SC18Oct11      0.79             1.11            Rightward.Head 
+ SB28Sep11      0.51             2.49            Rightward.Head 
+ UC17feb12      0.39             0.47            Rightward.Head 
+ SB10Oct11      0.36             0.97            Rightward.Eye  
+ UB05jan12      0.28             0.87            Rightward.Head 
+ UB28sep11      0.25             0.69            Rightward.Head 
+ UB23mar12      0.24             0.40            Rightward.Head 
+ SC28Nov11      0.22             0.95            Rightward.Eye  
+ SC16Sep11      0.14             0.74            Rightward.Eye  
+ UC03jan12      0.13             0.44            Rightward.Eye  
+ SC07Oct11      0.11             0.48            Rightward.Head 
+
+Although our focus is on horizontal movements, our data set included movements off of the horizontal axis. These movements give us the opportunity to assess the sensitivity of these neurons to oblique eye and head movements. In the table below, we show the results of allowing upward or downward movements to be included as variables in the model, using the same modeling procedure as above. In the table, we represent upward movements with u and downward movements with d. We restrict the table to show only the eight neurons that included a vertical component to the fit.
 
 
-The box plot below compares the coefficients for head velocity obtained through linear regression on gaze shift and pursuit trials. We fit each subset individually, using the same formula obtained from applying the stepwiselm function to the entire set.
-
-
-```r
-g<-subset(gs,rsquared>0) #gs loaded in first chunk
-tall<-g %>% gather(key,value,c(6,7,8,9,10,12))
-
-#tall$key<-factor(tall$key,levels=c('rhv','lhv','rep','lep','rhp','rha'))
-#qplot(value,facets=key~.,data=tall,fill=tall$gsp,binwidth=0.1)+scale_fill_discrete(name="Trial\nType")
-
-tall<-g %>% gather(key,value,c(6,7))
-#qplot(value,facets=key~.,data=tall,fill=tall$gsp,binwidth=0.1)+scale_fill_discrete(name="Trial\nType")
-
-qplot(key,value,data=tall,geom='boxplot',fill=gsp)+
-  scale_fill_grey(start=0)+
-  theme_bw()+
-  theme(legend.position = "bottom")
-```
-
-![](extrafigs2_files/figure-html/gspdiff-1.png) 
-
-The plots below show the difference in the fit coefficients for leftward and rightward movements. paired t-tests accompany.
-
-
-```r
-g %>% 
-  select(1,5,6) %>% 
-  spread(gsp,rhv) %>% 
-  mutate(rhv=ps-gs)-> rdiff
-g %>% 
-  select(1,5,7) %>% 
-  spread(gsp,lhv) %>% 
-  mutate(lhv=ps-gs)-> ldiff
-
-rd<-t.test(rdiff$rhv)
-ld<-t.test(ldiff$lhv)
-qplot(ldiff$lhv,binwidth=0.1)+geom_vline(x=ld$estimate,size=2)
-```
-
-![](extrafigs2_files/figure-html/ttestovgsps-1.png) 
-
-```r
-ld
-```
-
-```
-## 
-## 	One Sample t-test
-## 
-## data:  ldiff$lhv
-## t = 4.6735, df = 29, p-value = 6.281e-05
-## alternative hypothesis: true mean is not equal to 0
-## 95 percent confidence interval:
-##  0.07598008 0.19423103
-## sample estimates:
-## mean of x 
-## 0.1351056
-```
-
-```r
-qplot(rdiff$rhv,binwidth=0.1)+geom_vline(x=rd$estimate,size=2)
-```
-
-![](extrafigs2_files/figure-html/ttestovgsps-2.png) 
-
-```r
-rd
-```
-
-```
-## 
-## 	One Sample t-test
-## 
-## data:  rdiff$rhv
-## t = 1.7753, df = 28, p-value = 0.08672
-## alternative hypothesis: true mean is not equal to 0
-## 95 percent confidence interval:
-##  -0.009332752  0.130658603
-## sample estimates:
-##  mean of x 
-## 0.06066293
-```
+Neuron      shift   rsquared   f                        
+----------  ------  ---------  -------------------------
+UB28sep11   20      0.37       fr ~ 1 + rhp + rhv + uhv 
+SC21Dec11   130     0.34       fr ~ 1 + lhv + uhp       
+UC17feb12   100     0.31       fr ~ 1 + lhv + rep + uhv 
+SC19Oct11   70      0.36       fr ~ 1 + rhv + uhv + dep 
+SD04Jan12   60      0.26       fr ~ 1 + rhv + uhv       
+SB30Sep11   130     0.27       fr ~ 1 + rhv + uhv       
+SB04Nov11   90      0.10       fr ~ 1 + uhv             
+UB11jan12   40      0.14       fr ~ 1 + dhv             

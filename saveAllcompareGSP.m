@@ -64,7 +64,7 @@ otable=getcoefs(otable);
 display('Saving Results...')
 output=otable;
 try
-    writetable(otable,'gspsComparison.csv')
+    writetable(otable,'gspsComparisonFULL.csv')
 catch
     output=otable;
     display('Save Failed')

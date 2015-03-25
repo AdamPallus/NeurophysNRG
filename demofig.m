@@ -31,10 +31,17 @@ hlaser=uicontrol('style','popupmenu','string',{'Laser 5','Laser 6','Laser 7'});
 hlaser.Units='normalized';
 hlaser.Position=[0.1 0.35 0.45 0.1];
 
+minHead=uicontrol(f,'style','edit','units','normalized',...
+    'position',[0.6 0.3,0.1 0.05],...
+    'string','0');
+
+maxHead=uicontrol(f,'style','edit','units','normalized',...
+    'position',[0.6 0.4 0.1 0.05],...
+    'string','400');
 
 b1=uicontrol(f,'string','Plot','units','normalized',...
     'position',[0.2 0.2 0.1 0.1],...
-    'callback',{@plotn,rr,isgs,hlaser});
+    'callback',{@plotn,rr,isgs,hlaser,minHead,maxHead});
 b2=uicontrol(f,'string','Plot Peak','units','normalized',...
     'position',[0.3 0.2 0.1 0.1],...
     'callback',{@plotpeak,rr});
@@ -42,6 +49,8 @@ b2=uicontrol(f,'string','Plot Peak','units','normalized',...
 ns=uicontrol(f,'string','Load New Cell','units','normalized',...
     'position',[0.5 0.2 0.2 0.1],...
     'callback',@newcell);
+
+
 end
 
 function newcell(~,~)
@@ -68,21 +77,25 @@ scatter(rp.head_peak,rp.maxpredict)
 legend({'Gaze Shift','Pursuit Trials'})
 end
 
-function plotn(~,~,rr,isgs,hlaser)
+function plotn(~,~,rr,isgs,hlaser,minHead,maxHead)
 isgs=isgs.Value;
 hlaser=hlaser.Value+4;
 
+minHead=str2num(minHead.String);
+maxHead=str2num(maxHead.String);
+
 if isgs==1
-plotneuron(rr(rr.isgs&rr.hlaser==7&rr.head_peak>0,:))
-plotneuron(rr(rr.isgs&rr.hlaser==6&rr.head_peak>0,:))
-plotneuron(rr(rr.isgs&rr.hlaser==7&rr.head_peak<0,:))
-plotneuron(rr(rr.isgs&rr.hlaser==6&rr.head_peak<0,:))
+% plotneuron(rr(rr.isgs&rr.hlaser==7&rr.head_peak>0,:))
+plotneuron(rr(rr.isgs&rr.hlaser==hlaser&(rr.head_peak>minHead&rr.head_peak<maxHead),:))
+
+plotneuron(rr(rr.isgs&rr.hlaser==hlaser&(rr.head_peak<-minHead&rr.head_peak>-maxHead),:))
+
 else
     
-plotneuron(rr(~rr.isgs&rr.hlaser==7&rr.head_peak>0,:))
-plotneuron(rr(~rr.isgs&rr.hlaser==6&rr.head_peak>0,:))
-plotneuron(rr(~rr.isgs&rr.hlaser==7&rr.head_peak<0,:))
-plotneuron(rr(~rr.isgs&rr.hlaser==6&rr.head_peak<0,:))
+% plotneuron(rr(~rr.isgs&rr.hlaser==7&rr.head_peak>0,:))
+plotneuron(rr(~rr.isgs&rr.hlaser==hlaser&rr.head_peak>0&(rr.head_peak>minHead&rr.head_peak<maxHead),:))
+% plotneuron(rr(~rr.isgs&rr.hlaser==7&rr.head_peak<0,:))
+plotneuron(rr(~rr.isgs&rr.hlaser==hlaser&rr.head_peak<0&(rr.head_peak<-minHead&rr.head_peak>-maxHead),:))
 end
 end
 

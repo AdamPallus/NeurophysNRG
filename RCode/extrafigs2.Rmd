@@ -79,10 +79,6 @@ n.both<-length(unique(pp[pp$p.left<0.001&pp$p.right<0.001,]$Neuron))
 n.both.slope<-length(unique(pp[pp$p.left<0.001&pp$p.right<0.001,]$Neuron))
 n.both.int<-length(unique(pp[pp$p.left<0.001&pp$p.right<0.001,]$Neuron))
 
-
-
-
-
 ```
 In the figure below, we plot the `r n.left` neurons with significant leftward regressions, followed by the `r n.right` cells with signficant rightward regressions. We found that `r n.both` cells had signficant regressions in both directions.
 
@@ -164,9 +160,15 @@ p+geom_bar(aes(x=s$c),stat='identity')+xlab('Variable')+ylab('Count')+
 
 ```
 
-It is clear that leftward and rightward head velocity are included more than any other varaibles, but we also see influence of head and eye position in several models. Only one model was improved significantly by the inclusion of head acceleration.
+It is clear that leftward and rightward head velocity are included more than any other varaibles, but we also see influence of head and eye position in several models. Only one model was improved significantly by the inclusion of head acceleration. In the figure below, we compare the model prediction of firing rate with the actual firing rate for one neuron. The model for this neuron uses a latency of 130 ms and predicts firing rate with an R^2^ of 0.47 using only leftward head velocity. The stepwise fit procedure did not find any single term that would improve the R^2^ by 0.05 or more, yet the model systematically underestimates firing rate during the gaze shift and overestimates firing rate during the pursuit task. This is consistent with the previous observation that the relationship between peak firing rate and peak head velocity was significantly different between tasks types for this neuron. 
 
-Because head position and eye position are often correlated, we investigate this position-related activity further by isolating the periods of fixation before and after gaze shifts. We fit each cell with a position term included in the stepwise fit above with the model: 
+![ModelGSPSExample](ModelDemoSC23Sep11.png)
+
+Below, we show the model prediction for a neuron that includes a significant eye position term. In the left panels, the eyes begin the trials in the center of the orbits, while in the right panels, the eyes begin deviated to the right in the orbits. The increased firing during fixation in this position is predicted by the eye position term in the model. Similarly, after the gaze shift, the firing rate is also elevated, corresponding with the eccentric eye position.
+
+![ModelPositionExample](ModelDemoSB21Oct11.png)
+
+Because head position and eye position are often correlated, it may be possible to model activity equally well using either as a single parameter in the model, particularly for models with low R^2^ values. We investigate this position-related activity further by isolating the periods of fixation before and after gaze shifts. We then fit the activity of each of the cells that included a position term in the stepwise fit above with the model: 
 
 $$Fr = x_{0}+x_{1}H_{R}+x_{2}E_{R}+x_{3}H_{L}+x_{4}E_{L}$$
 
@@ -176,53 +178,23 @@ In the table below, for each neuron, we show the coefficient ($x_{1-4}$) with th
 staticBestFitLR <- read.csv("~/MATLAB/NeurophysNRG/Resort/staticBestFitLR.csv", na.strings="NaN")
 
 staticBestFitLR %>%
-  select(1:6) %>%
-  rename(Rightward.Eye=rep,Leftward.Eye=lep,Rightward.Head=rhp) %>%
+  select(1:7) %>%
+  rename(Rightward.Eye=rep,Leftward.Eye=lep,Rightward.Head=rhp,Leftward.Head=lhp) %>%
   gather('coef','b',4:6) %>%
   group_by(Neuron) %>%
-  summarise(Coeficient=max(b),Position.Type=coef[b==Coeficient]) %>%
-  arrange(desc(Coeficient))-> t
+  summarise(rsquared=max(rsquared),Highest.Coefficient=max(b),Position.Type=coef[b==Highest.Coefficient]) %>%
+  arrange(desc(rsquared))-> t
 kable(t,digits=2,align='c')
 ```
 
+Although our focus is on horizontal movements, our data set included movements off of the horizontal axis. These movements give us the opportunity to assess the sensitivity of these neurons to oblique eye and head movements. In the table below, we show the results of allowing upward or downward movements to be included as variables in the model, using the same modeling procedure as above. In the table, we represent upward movements with u and downward movements with d. We restrict the table to show only the eight neurons that included a vertical component to the fit.
 
-The box plot below compares the coefficients for head velocity obtained through linear regression on gaze shift and pursuit trials. We fit each subset individually, using the same formula obtained from applying the stepwiselm function to the entire set.
+```{r verticalComponent,echo=FALSE}
+verticalFits <- read.csv("~/MATLAB/NeurophysNRG/regressionUDfinal.csv", na.strings="NaN")
 
-```{r gspdiff, message=FALSE,warning=FALSE}
-
-g<-subset(gs,rsquared>0) #gs loaded in first chunk
-tall<-g %>% gather(key,value,c(6,7,8,9,10,12))
-
-#tall$key<-factor(tall$key,levels=c('rhv','lhv','rep','lep','rhp','rha'))
-#qplot(value,facets=key~.,data=tall,fill=tall$gsp,binwidth=0.1)+scale_fill_discrete(name="Trial\nType")
-
-tall<-g %>% gather(key,value,c(6,7))
-#qplot(value,facets=key~.,data=tall,fill=tall$gsp,binwidth=0.1)+scale_fill_discrete(name="Trial\nType")
-
-qplot(key,value,data=tall,geom='boxplot',fill=gsp)+
-  scale_fill_grey(start=0)+
-  theme_bw()+
-  theme(legend.position = "bottom")
-```
-
-The plots below show the difference in the fit coefficients for leftward and rightward movements. paired t-tests accompany.
-
-```{r ttestovgsps}
-g %>% 
-  select(1,5,6) %>% 
-  spread(gsp,rhv) %>% 
-  mutate(rhv=ps-gs)-> rdiff
-g %>% 
-  select(1,5,7) %>% 
-  spread(gsp,lhv) %>% 
-  mutate(lhv=ps-gs)-> ldiff
-
-rd<-t.test(rdiff$rhv)
-ld<-t.test(ldiff$lhv)
-qplot(ldiff$lhv,binwidth=0.1)+geom_vline(x=ld$estimate,size=2)
-ld
-qplot(rdiff$rhv,binwidth=0.1)+geom_vline(x=rd$estimate,size=2)
-rd
-
+verticalFits %>%
+  filter(anyvert==1) %>%
+  select(1:4) %>%
+  kable(digits=2,align='l')
 
 ```
