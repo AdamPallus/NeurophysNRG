@@ -1,11 +1,16 @@
 ---
-title: "NRG Additional Figures"
+title: "NRG Recording Analysis"
 output:
+  word_document: default
+  pdf_document:
+    fig_crop: no
   html_document:
     keep_md: yes
 ---
 #Results
 We isolated 163 neurons (94 from S and 69 from U) in NRG while monkeys performed head-unrestrained gaze shifts and gaze pursuit tasks. We chose 51 of these neurons for further analysis in this report, based on apparent head-movement-related activity as perceived by the researchers during recording, and the recording of at least 50 successful trials while isolation was maintained. The behavior tasks that our monkeys performed provided us with a large variety of head movements to investigate. Controlling initial eye position provided us with examples of pursuit and gaze shifts of similar velocities and amplitudes with varying amounts of head contribution. This provided us with the ability to identify neurons with head-related activity during recording. For offline analysis, we can compare the firing rate of the neurons to the actual head and eye kinematics on a trial-by-trial basis. While our focus was on horizontal movements, we recorded the vertical positions of the gaze, eyes and head at all times. 
+
+`r library(knitr)` `r opts_chunk$set(cache=FALSE,echo=FALSE)`
 
 ```{r load csv, cache=FALSE,message=FALSE,warning=FALSE,echo=FALSE}
 #in this chunk we load the required libraries and import the .csv files containing the data output from our Matlab analyses. 
@@ -26,11 +31,29 @@ source('~/MATLAB/NeurophysNRG/RCode/StatSmoothFunc.R') #function to add formula 
 Since we have preselected our neurons based on apparent task-related activity, we first look for evidence that the rate of activity is correlated with the velocity of head movements. In the following figure, we plot the peak velocity of the head (negative values indicate that the fastest head movement was leftward), and the peak discharge rate of the cell during each trial. We show data observed during all trial types. For pursuit trials, we restrained our search for the peak values to the first trajectory only, to avoid including effects from vertical or oblique movements. 
 
 
-```{r peakAnalysisDUMP,fig.width=9, fig.height=44,echo=FALSE}
-qplot(head_peak,maxsdf*1400,data=p)+
+```{r peakAnalysisDUMP,fig.width=9, fig.height=10,echo=FALSE}
+neurons<-levels(p$Neuron)
+n.neurons<-length(neurons)
+p1<-subset(p,Neuron %in% neurons[1:18])
+p2<-subset(p,Neuron %in% neurons[19:36])
+p3<-subset(p,Neuron %in% neurons[37:n.neurons])
+#p4<-subset(p,Neuron %in% neurons[46:n.neurons])
+qplot(head_peak,maxsdf*1400,data=p1)+
   facet_wrap(~Neuron,ncol=3)+
   ylab('Peak Firing Rate (spikes/s)')+
   xlab('Peak Head Velocity (deg/s)')
+qplot(head_peak,maxsdf*1400,data=p2)+
+  facet_wrap(~Neuron,ncol=3)+
+  ylab('Peak Firing Rate (spikes/s)')+
+  xlab('Peak Head Velocity (deg/s)')
+qplot(head_peak,maxsdf*1400,data=p3)+
+  facet_wrap(~Neuron,ncol=3)+
+  ylab('Peak Firing Rate (spikes/s)')+
+  xlab('Peak Head Velocity (deg/s)')
+#qplot(head_peak,maxsdf*1400,data=p4)+
+#  facet_wrap(~Neuron,ncol=3)+
+#  ylab('Peak Firing Rate (spikes/s)')+
+#  xlab('Peak Head Velocity (deg/s)')
   
 ```
 
@@ -82,27 +105,30 @@ n.both.int<-length(unique(pp[pp$p.left<0.001&pp$p.right<0.001,]$Neuron))
 ```
 In the figure below, we plot the `r n.left` neurons with significant leftward regressions, followed by the `r n.right` cells with signficant rightward regressions. We found that `r n.both` cells had signficant regressions in both directions.
 
-```{r leftRegressions, fig.width=9,fig.height=24}
+```{r leftRegressions, fig.width=9,fig.height=11}
 #In this figure, we're showing all the cells with significant regressions for leftward movements
 qplot(head_peak,maxsdf*1400,
       data=filter(pp,head_peak< -20,p.left<0.001))+
-  facet_wrap(~Neuron,ncol=2)+stat_smooth(method='lm',col='black')+
-  stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=0.3,size=4)+
+  facet_wrap(~Neuron,ncol=4)+stat_smooth(method='lm',col='black')+
+  stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=0.3,size=4,col='grey')+
   theme_bw()+
   ylab('Peak Firing Rate (spikes/s)')+
   xlab('Peak Head Velocity (deg/s)')
 ```
 
-```{r rightRegressions, fig.width=9,fig.height=24}
+```{r rightRegressions, fig.width=9,fig.height=11}
 #In this figure, we're showing all the cells with significant regressions for rightward movements
 qplot(head_peak,maxsdf*1400,
       data=filter(pp,head_peak > 20,p.right<0.001))+
-  facet_wrap(~Neuron,ncol=2)+stat_smooth(method='lm',col='black')+
-  stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=-0.2,size=4)+
+  facet_wrap(~Neuron,ncol=4)+stat_smooth(method='lm',col='black')+
+  stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=-0.2,size=4,col='grey')+
   theme_bw()+
   ylab('Peak Firing Rate (spikes/s)')+
   xlab('Peak Head Velocity (deg/s)')
 ```
+As a summary, we show the regression lines from all of the above neurons on the same axes, separated by direction preference.
+
+![Linear regression models for the relationship between peak head velocity and peak firing rate of each neuron.](peakregressions.png)
 
 Of the cells with significant regressions for all head movements, we further tested for the significance of the type of task that was used to elicit the head movements on this relationship. We fit the model $$Fr_{peak} = x_{0}+x_{1} H_{peak}+x_{2} T_{type}+x_{3} H_{peak}*T_{type},$$ where $Fr_{peak}$ is the peak firing rate, $H_{peak}$ is the peak head velocity, and $T_{type}$ is the task  (delayed gaze shift or head-unrestrained pursuit) that was required during each trial,and the $*$ indicates an interaction between the two parameters. A significant $x_{2}$ term indicates a difference in the intercepts for the relationship between peak head velocity and peak firing rate for the trial types, while a significant $x_{3}$ term indicates a difference in slope between the two.  
 

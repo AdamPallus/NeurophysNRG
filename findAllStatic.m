@@ -7,13 +7,17 @@
 %subsets to just the gaze shift trials
 
 function findAllStatic
-try
-[filenames, filepath]=uigetfile({'Resort\*.mat'},'Select Files to Analyze',...
-    'multiselect','on');
-catch
-    [filenames, filepath]=uigetfile({'*.mat'},'Select Files to Analyze',...
-    'multiselect','on');
-end
+
+x=readtable('staticBestFitLR.csv');
+filenames=x.Neuron;
+clear x
+% try
+% [filenames, filepath]=uigetfile({'Resort\*.mat'},'Select Files to Analyze',...
+%     'multiselect','on');
+% catch
+%     [filenames, filepath]=uigetfile({'*.mat'},'Select Files to Analyze',...
+%     'multiselect','on');
+% end
 
 %if there is only one file selected, it will be a character array. Convert
 %this to a cell array so we don't have to keep checking.
@@ -30,7 +34,7 @@ for f =1:length(filenames)
     try
     tt=tic; %Start Timing
     filename=filenames{f};
-    b=load([filepath, filename]);
+    b=load([filename,'Sorted.mat']);
     %These files should contain one variable. Get its name.
     fn=fields(b);
     fn=fn{1};
@@ -41,8 +45,8 @@ for f =1:length(filenames)
     end
     o=bestFitStatic(b.(fn),300);
     clear b
-    savename=[fn,'-StaticFit.mat'];
-    save([filepath, savename],'o');
+    savename=[fn,'-StaticFit3.mat'];
+    save([savename],'o');
     clear o
     x(f)=toc(tt);
     display(sprintf('Saved %s... It took %0.1f minutes.',fn,x(f)/60))
@@ -50,6 +54,7 @@ for f =1:length(filenames)
     display(sprintf('Estimating %0.1f minutes remaining',estimate/60))
     catch
         warning('failed')
+        lasterr
         continue
     end
 end
@@ -59,7 +64,7 @@ end
 function o= bestFitStatic(r,fixDur)
 % function [mLeft, mRight,bestLeft,bestRight]= bestFitSdf(r)
 
-possibleShifts=0:10:200;
+possibleShifts=50;
 
 %find the best shift for the largest possible model
 progressbar=waitbar(0,'Finding Best Shift');
@@ -67,7 +72,7 @@ r=addsdf(r,15);
 r=recalculatevels(r);
 for i =1:length(possibleShifts)
     tic
-    waitbar(i/length(0:10:200),progressbar)
+    waitbar(i/length(possibleShifts),progressbar)
     d=sdftableLR(r,possibleShifts(i),fixDur);
 
     d=d(d.rhv+d.lhv+d.lev+d.rev<5,:);

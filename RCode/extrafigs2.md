@@ -169,19 +169,19 @@ In the table below, for each neuron, we show the coefficient ($x_{1-4}$) with th
 
   Neuron      rsquared    Highest.Coefficient    Position.Type  
 -----------  ----------  ---------------------  ----------------
- UB21dec11      0.95             7.97             Leftward.Eye  
- SB21Oct11      0.84             2.07            Rightward.Eye  
- SC18Oct11      0.79             1.11            Rightward.Head 
- SB28Sep11      0.51             2.49            Rightward.Head 
- UC17feb12      0.39             0.47            Rightward.Head 
- SB10Oct11      0.36             0.97            Rightward.Eye  
- UB05jan12      0.28             0.87            Rightward.Head 
- UB28sep11      0.25             0.69            Rightward.Head 
- UB23mar12      0.24             0.40            Rightward.Head 
- SC28Nov11      0.22             0.95            Rightward.Eye  
- SC16Sep11      0.14             0.74            Rightward.Eye  
- UC03jan12      0.13             0.44            Rightward.Eye  
- SC07Oct11      0.11             0.48            Rightward.Head 
+ UB21dec11      0.95             7.96             Leftward.Eye  
+ SB21Oct11      0.76             2.16            Rightward.Eye  
+ SC18Oct11      0.58             0.85            Rightward.Head 
+ SC28Nov11      0.20             1.05            Rightward.Eye  
+ SB10Oct11      0.19             1.26            Rightward.Eye  
+ UB05jan12      0.14             0.57            Rightward.Head 
+ UC03jan12      0.11             0.39            Rightward.Eye  
+ UB28sep11      0.11             0.42            Rightward.Head 
+ SB28Sep11      0.10             1.27            Rightward.Head 
+ SC16Sep11      0.10             0.71            Rightward.Eye  
+ SC07Oct11      0.09             0.66            Rightward.Head 
+ UC17feb12      0.08             0.17            Rightward.Head 
+ UB23mar12      0.03             0.15            Rightward.Head 
 
 Although our focus is on horizontal movements, our data set included movements off of the horizontal axis. These movements give us the opportunity to assess the sensitivity of these neurons to oblique eye and head movements. In the table below, we show the results of allowing upward or downward movements to be included as variables in the model, using the same modeling procedure as above. In the table, we represent upward movements with u and downward movements with d. We restrict the table to show only the eight neurons that included a vertical component to the fit.
 

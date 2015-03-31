@@ -4,10 +4,10 @@ rr=addsdf(r);
 rr=recalculatevels(rr);
 
 try
-    d=readtable('C:\Users\adam2\Documents\MATLAB\NeurophysNRG\regressionUD.csv');
+    %d=readtable('C:\Users\adam2\Documents\MATLAB\NeurophysNRG\regressionUD.csv');
     thisNeuron=rr.trialnum{1}(1:9);
-    shift=d.shift(strcmp(d.Neuron,thisNeuron));
-    formula=d.f(strcmp(d.Neuron,thisNeuron));
+    shift=60;%d.shift(strcmp(d.Neuron,thisNeuron));
+    formula='fr~1+lep';%d.f(strcmp(d.Neuron,thisNeuron));
     [~, m]=bestFitVert(rr,shift,formula);
 catch
     error('Can''t get model');
