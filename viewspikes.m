@@ -113,8 +113,9 @@ end
 spikewindowsize=300;
 subplot(3,1,3)
 hold off
+try
 plot(0:1/25:length(s.wf{plotThis})/25-1/25,s.wf{plotThis}/10,'b')
-
+end
 
 hold on
 

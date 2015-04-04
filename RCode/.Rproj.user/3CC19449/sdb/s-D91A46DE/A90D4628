@@ -1,0 +1,17 @@
+{
+    "contents" : "p$maxsdf<-p$maxsdf*1400\np %>%\n  group_by(Neuron) %>%\n  do(right.model=summary(lm(maxsdf~head_peak,data=filter(.,head_peak>20))),\n     left.model =summary(lm(maxsdf~head_peak,data=filter(.,head_peak< -20)))) %>%\n      summarize(slope.right=right.model[[4]][2],\n            slope.left=left.model[[4]][2],\n            intercept.right=right.model[[4]][1],\n            intercept.left=left.model[[4]][1],\n            p.right=right.model[[4]][8],\n            p.left=left.model[[4]][8]) ->\n  mm\n\n%>%\n  summarize(slope.left=left.model$Coefficients[2]) ->\n  mm\n    \n    r.right=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak>20)))$r.squared,\n     r.left=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak< -20)))$r.squared,\n     slope.right=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak>20)))$coefficients[2],\n     slope.left=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak< -20)))$coefficients[2],\n     intercept.right=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak>20)))$coefficients[1],\n     intercept.left=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak< -20)))$coefficients[1],\n     p.right=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak>20)))$coefficients[8],\n     p.left=summary(lm(maxsdf ~ head_peak,data=filter(.,head_peak< -20)))$coefficients[8])->\n  mm\n\nslope.right=right.model$Coefficients[2],\nslope.left=left.model$Coefficients[2],\nintercept.right=right.model$Coefficients[1],\nintercept.left=left.model$Cofficients[1],\np.right=right.model$Coefficients[8],\np.left=left.model$Coefficients[8]\n\n\np %>%\n  group_by(Neuron) %>%\n  do(right.model=summary(lm(maxsdf~head_peak,data=filter(.,head_peak>20))),\n     left.model =summary(lm(maxsdf~head_peak,data=filter(.,head_peak< -20)))) %>%\n  mutate(r.right=right.model$r.squared,\n            r.left=left.model$r.squared,\n            slope.right=right.model[[4]][2],\n            slope.left=left.model[[4]][2],\n            intercept.right=right.model[[4]][1],\n            intercept.left=left.model[[4]][1],\n            p.right=right.model[[4]][8],\n            p.left=left.model[[4]][8]) %>%\n  select(-2,-3)->\n  mm\n\npp<-merge(p,mm,by='Neuron')\n",
+    "created" : 1428176041433.000,
+    "dirty" : true,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "1067977615",
+    "id" : "A90D4628",
+    "lastKnownWriteTime" : 1428175616,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

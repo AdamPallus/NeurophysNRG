@@ -1,13 +1,15 @@
-# NRG Additional Figures
+# NRG Recording Analysis
 #Results
 We isolated 163 neurons (94 from S and 69 from U) in NRG while monkeys performed head-unrestrained gaze shifts and gaze pursuit tasks. We chose 51 of these neurons for further analysis in this report, based on apparent head-movement-related activity as perceived by the researchers during recording, and the recording of at least 50 successful trials while isolation was maintained. The behavior tasks that our monkeys performed provided us with a large variety of head movements to investigate. Controlling initial eye position provided us with examples of pursuit and gaze shifts of similar velocities and amplitudes with varying amounts of head contribution. This provided us with the ability to identify neurons with head-related activity during recording. For offline analysis, we can compare the firing rate of the neurons to the actual head and eye kinematics on a trial-by-trial basis. While our focus was on horizontal movements, we recorded the vertical positions of the gaze, eyes and head at all times. 
+
+ 
 
 
 
 Since we have preselected our neurons based on apparent task-related activity, we first look for evidence that the rate of activity is correlated with the velocity of head movements. In the following figure, we plot the peak velocity of the head (negative values indicate that the fastest head movement was leftward), and the peak discharge rate of the cell during each trial. We show data observed during all trial types. For pursuit trials, we restrained our search for the peak values to the first trajectory only, to avoid including effects from vertical or oblique movements. 
 
 
-![](extrafigs2_files/figure-html/peakAnalysisDUMP-1.png) 
+![](extrafigs2_files/figure-html/peakAnalysisDUMP-1.png) ![](extrafigs2_files/figure-html/peakAnalysisDUMP-2.png) ![](extrafigs2_files/figure-html/peakAnalysisDUMP-3.png) 
 
 From the figure above, it is apparent that we have a heterogenious sample of neurons. The peak firing rate of many cells never exceeds 200 spikes/s, while some have a peak firing rate greater than 400 spikes/s. There seem to be correlations between the peak head velocity and peak firing rate in many neurons, and this correlation appears to be directionly selective. 
 
@@ -19,76 +21,23 @@ For our first statistical test, we use linear regression to find the relationshi
 
 In the figure below, we plot the 20 neurons with significant leftward regressions, followed by the 20 cells with signficant rightward regressions. We found that 9 cells had signficant regressions in both directions.
 
-
-```r
-#In this figure, we're showing all the cells with significant regressions for leftward movements
-qplot(head_peak,maxsdf*1400,
-      data=filter(pp,head_peak< -20,p.left<0.001))+
-  facet_wrap(~Neuron,ncol=2)+stat_smooth(method='lm',col='black')+
-  stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=0.3,size=4)+
-  theme_bw()+
-  ylab('Peak Firing Rate (spikes/s)')+
-  xlab('Peak Head Velocity (deg/s)')
-```
-
 ![](extrafigs2_files/figure-html/leftRegressions-1.png) 
 
-
-```r
-#In this figure, we're showing all the cells with significant regressions for rightward movements
-qplot(head_peak,maxsdf*1400,
-      data=filter(pp,head_peak > 20,p.right<0.001))+
-  facet_wrap(~Neuron,ncol=2)+stat_smooth(method='lm',col='black')+
-  stat_smooth_func(method='lm',geom='text',parse=TRUE,hjust=-0.2,size=4)+
-  theme_bw()+
-  ylab('Peak Firing Rate (spikes/s)')+
-  xlab('Peak Head Velocity (deg/s)')
-```
-
 ![](extrafigs2_files/figure-html/rightRegressions-1.png) 
+As a summary, we show the regression lines from all of the above neurons on the same axes, separated by direction preference.
+
+![Linear regression models for the relationship between peak head velocity and peak firing rate of each neuron.](peakregressions.png)
 
 Of the cells with significant regressions for all head movements, we further tested for the significance of the type of task that was used to elicit the head movements on this relationship. We fit the model $$Fr_{peak} = x_{0}+x_{1} H_{peak}+x_{2} T_{type}+x_{3} H_{peak}*T_{type},$$ where $Fr_{peak}$ is the peak firing rate, $H_{peak}$ is the peak head velocity, and $T_{type}$ is the task  (delayed gaze shift or head-unrestrained pursuit) that was required during each trial,and the $*$ indicates an interaction between the two parameters. A significant $x_{2}$ term indicates a difference in the intercepts for the relationship between peak head velocity and peak firing rate for the trial types, while a significant $x_{3}$ term indicates a difference in slope between the two.  
 
 In the figures below, we plot data from the  5 cells with significant effects of the task type on either the slope or intercept of the fit for leftward head movements, followed by the 7 cells significant during rightward movements.
 
 
-
-```r
-qplot(head_peak,maxsdf*1400,col=isgs,
-      data=filter(pp,head_peak< -20,p.left<0.001,p.left.slope<0.001 | p.left.int<0.001))+
-  facet_wrap(~Neuron,ncol=3)+stat_smooth(method='lm')+
-  ylab('Peak Firing Rate (spikes/s)')+
-  xlab('Peak Head Velocity (deg/s)')+
-  theme_bw()+
-  scale_colour_grey(start = 0, end = .7,name='Task Type')+
-  theme(legend.position='bottom')
-```
-
 ![](extrafigs2_files/figure-html/gspsLeftward-1.png) 
-
-
-```r
-qplot(head_peak,maxsdf*1400,col=isgs,
-      data=filter(pp,head_peak> 20,p.right<0.001,p.right.slope<0.001 | p.right.int<0.001))+
-  facet_wrap(~Neuron,ncol=3)+stat_smooth(method='lm')+
-  ylab('Peak Firing Rate (spikes/s)')+
-  xlab('Peak Head Velocity (deg/s)')+
-  theme_bw()+
-  scale_colour_grey(start = 0, end = .7,name='Task Type')+
-  theme(legend.position='bottom')
-```
 
 ![](extrafigs2_files/figure-html/gspsRightward-1.png) 
 
 Following the methods described above (see Methods: Modeling), for each cell, we generated a model to predict the firing rate of the neuron in terms of eye and head position, velocity and acceleration. Each model includes only terms that increase the R^2^ of the model by 0.05 or more. When describing velocity and position, we typically use negative values to indicate leftward, but for these models, we treat leftward and rightward values as separate variables. The table below shows the resulting best model for each cell, the shift, or latency between neural activity and behavior that provides the best model (measured by R^2^) and the R^2^ of the resulting model compared to the real neural activity.
-
-
-```r
-tab<-xtable(d[,1:4],caption='This table shows the results of a step-wise fitting procedure that with a threshold for inclusion of an increase of 0.5 in the R2')
-#print(tab,comment=FALSE)
-kable(d[,1:4],digits=2,align='l')
-```
-
 
 
 Neuron      shift   rsquared   f                        
