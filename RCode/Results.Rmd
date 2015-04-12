@@ -25,8 +25,8 @@ source('~/MATLAB/NeurophysNRG/RCode/StatSmoothFunc.R') #function to add formula 
 
 ```{r Signficance,echo=FALSE}
 #In this chunk, we're doing statistical tests to identify cells with signficant correlations between peak head velocity and peak firing rate (p values stored in p.right and p.left). We are also identifying cells with an effect of trial type (noticing if the slope or intercept is significant for the interaction). 
-p$isgs<-as.factor(p$isgs)
-levels(p$isgs)<-c('Pursuit','Gaze Shift')
+p$Task<-as.factor(p$isgs)
+levels(p$Task)<-c('Pursuit','Gaze Shift')
 p$maxsdf<-p$maxsdf*1400 #scale to spikes/s 
 
 p %>%
@@ -53,11 +53,12 @@ n.total<-length(unique(pp$Neuron))
 #Results
 We isolated 163 neurons (94 from S and 69 from U) in our target region while monkeys performed head-unrestrained gaze shifts and gaze pursuit tasks. This report includes a detailed analysis of 51 of these neurons,  chosen based on apparent task-related activity while the monkey completion of at least 30 trials randomly selected from our two task types.
 
-We find that the activity of many of these neurons is related to the velocity of the head as it contributes to gaze movement. In figure 1, we show scatter plots comparing the peak head velocity with the peak firing rate of some example cells in our data set. Data from the entire data set appears in Supplementary Figure 1 at the end of this document. Each point represents a single successful trial and both task types are included. It appears that peak firing rate increases linearly with peak head velocity, but often only in a single direction. 
+##Influence of Head Velocity
+We find that the activity of many of these neurons is related to the velocity of the head as it contributes to gaze movement. In Figure 1, we show scatter plots comparing the peak head velocity with the peak firing rate of some example cells in our data set. Data from the entire data set appears in Supplementary Figure 1 at the end of this document. Each point represents a single successful trial and both task types are included. It appears that peak firing rate increases linearly with peak head velocity, but often only in a single direction. 
 
 ```{r exampleCells, fig.width=9,fig.height=11}
 #In this figure, we're showing all the cells with significant regressions for leftward movements
-qplot(head_peak,maxsdf,
+qplot(head_peak,maxsdf,alpha=I(0.5),
       data=filter(pp,r.left>0.4 | r.right>0.4))+
   facet_wrap(~Neuron,ncol=3)+
   theme_bw()+
@@ -79,7 +80,7 @@ mm %>%
 
 ![Linear regression models for the relationship between peak head velocity and peak firing rate of each neuron.](peakregressions.png)
 
-We find more evidence of head velocity-related activity in the results of the stepwise linear modeling analysis. For each neuron, we attempted to construct a model to predict the firing rate of the cell. We began with a constant model and programmatically added terms to the model that improved the R^2^ by at least 0.5. Possible terms included the position, velocity and acceleration of the eyes or head in either direction. This gave a total of 12 terms that could potentially be included. We allowed for the inclusion of first-order interactions but none were added to the final models of any cells in our data set. With these criteria, leftward head velocity was a component in the models of 30 neurons and rightward head velocity was included in 29.  Figure 2 shows the frequency with which the 12 potential terms were included in any models. 
+More evidence of head velocity-related activity appears in the results of the stepwise linear modeling analysis. As described in *Methods*, we construct models to predict the firing rate of each cell. We began with a constant model and programmatically added terms to the model that improved the R^2^ by at least 0.5. Possible terms included the position, velocity and acceleration of the eyes or head in either direction. This gave a total of 12 terms that could potentially be included. We allowed for the inclusion of first-order interactions but no interactions improved models enogh to be included. With these criteria, leftward head velocity was a component in the models of 30 neurons and rightward head velocity was included in 29.  Figure 2 shows the frequency with which the 12 potential terms were included in any models. 
 
 ```{r coefCounts,warning=FALSE,message=FALSE,echo=FALSE}
 
@@ -98,6 +99,7 @@ qplot(y=n,x=s$c,geom='bar',stat='identity',data=s)+
 
 ```
 
+##Static Position-Related Activity
 From the histogram in Figure 2, it is clear that head velocity is the most important factor for predicting the firing rate of the neurons, but other terms are also included for some cells. Neither eye velocity nor acceleration are included in any models, and head acceleration is included in only one. However, there are a number of neurons with a term related to the position of the head or the positions of the eyes in the orbits. Although the best fit for three neurons included only terms related to position, the rest have position terms in addition to head velocity. We show the results of the stepwise regression modeling for the ten cells with the best fit in Table 2. Results from all neurons are shown in Supplementary Table 2.
 
 ```{r formulatable}
@@ -125,27 +127,102 @@ staticBestFitLR %>%
 kable(tstatic,digits=2,align='l')
 ```
 
-#Supplementary Figures
+##Task-Related Activity
+The relatioship between firing rate and head velocity was largely consistent regardless of the task being performed. During the delayed gaze shift task, subjects typically executed a single, large gaze shift with varying head movements, depending on the amplitude of the movement and initial positions of the eyes in the orbits.  During the visual pursuit task, subjects performed smooth gaze pursuit, with head movements driven by the velocity of the visual target and the initial positions of the eyes in the orbits. We did not record any neurons with activity limited to one behavior type. In the figure below, we compare the relationship between peak firing rate and the peak head velocity during the two tasks. 
 
-```{r peakAnalysisDUMP,fig.width=9, fig.height=10,echo=FALSE}
+```{r examplegsps, fig.width=9,fig.height=11}
+#In this figure, we're showing all the cells with significant regressions for leftward movements
+qplot(head_peak,maxsdf,col=Task,shape=Task,alpha=I(0.5),
+      data=filter(pp,r.left>0.4 | r.right>0.4))+
+  facet_wrap(~Neuron,ncol=3)+
+  ylab('Peak Firing Rate (spikes/s)')+
+  xlab('Peak Head Velocity (deg/s)')
+```
+
+We investigate the impact of task type on the relationship between the peak head velocity and peak firing rate of the cell using ANCOVA by fitting the model $$Fr_{peak} = x_{0}+x_{1} H_{peak}+x_{2} T_{type}+x_{3} H_{peak}*T_{type},$$ where $Fr_{peak}$ is the peak firing rate, $H_{peak}$ is the peak head velocity, and $T_{type}$ is the task  (delayed gaze shift or head-unrestrained pursuit) that was performed during each trial,and the $*$ indicates an interaction between the two parameters. For this analysis, we omitted trials where the peak head velocity did not exceed 40 deg/s, because we did not have an equal sampling of trials with little head movement from both task types. Using a threshold of p < 0.001, we identified cells for which we should reject the null hypothesis that the task is irrelevant for predicting the firing rate, once the head velocity is known. We show the cells meeting these criterea below.
+
+
+
+```{r GSPS}
+p %>%
+  filter(maxsdf>10) %>%
+  group_by(Neuron) %>%
+  do(right.model=summary(lm(maxsdf~head_peak*Task,
+                            data=filter(.,head_peak>50))),
+     left.model =summary(lm(maxsdf~head_peak*Task,
+                            data=filter(.,head_peak< -50)))) %>%
+  mutate(p.left.slope=left.model[[4]][16],
+         p.left.int=left.model[[4]][[15]],
+         p.right.slope=right.model[[4]][16],
+         p.right.int=right.model[[4]][15],
+         p.right=right.model[[4]][14],
+         p.left=left.model[[4]][14]) %>%
+  select(-2,-3) %>%
+  merge(p,.,by='Neuron') ->
+gsps
+
+
+
+```
+
+```{r gspsplots,fig.width=9}
+
+rcells<-filter(gsps,p.right<0.001,p.right.int<0.001 | p.right.slope <0.001)
+lcells<-filter(gsps,p.left<0.001,p.left.int<0.001 | p.left.slope<0.001)
+rlcells<-rbind(rcells,lcells)
+
+qplot(head_peak,maxsdf,col=Task,shape=Task,alpha=I(0.5),
+      data=filter(rcells,head_peak>40))+
+        facet_wrap(~Neuron)+
+        stat_smooth(method='lm')
+qplot(head_peak,maxsdf,col=Task,shape=Task,alpha=I(0.5),
+      data=filter(lcells,head_peak< -40))+
+  facet_wrap(~Neuron)+
+  stat_smooth(method='lm')
+
+```
+
+When we compare the cells identified using this method with the formula that these neurons were assigned during the multiple regression analysis, we can see that 3/4 of the cells have an additional factor besides head velocity that explains what is going on. The other cell cannot be explained in this fashion, but the firing rate overall is low (<100 spikes/s) and the R^2^ of the fit for this cell is only 0.2, meaning there is plenty of room for another factor to be impacting this result that should be considered before we imagine that "task type" has a significant impact here.
+
+
+```{r gspsformulae,warning=FALSE,message=FALSE}
+
+rlf<-inner_join(rlcells,d) # join this with the table with multiple regressions
+rlf %>% 
+  select(c(Neuron,rsquared,f)) %>% 
+  group_by(Neuron) %>% 
+  summarize(formula=f[1],R.squared=rsquared[1]) -> #summarize just the formula for each neuron
+  gspstable
+
+kable(gspstable)
+```
+
+
+##Supplementary Figures
+
+```{r peakAnalysisDUMP,fig.width=9, fig.height=30,echo=FALSE}
 neurons<-levels(p$Neuron)
 n.neurons<-length(neurons)
+qplot(head_peak,maxsdf,alpha=I(0.5),data=p)+
+  facet_wrap(~Neuron,ncol=3)+
+  ylab('Peak Firing Rate (spikes/s)')+
+  xlab('Peak Head Velocity (deg/s)')
 p1<-subset(p,Neuron %in% neurons[1:18])
 p2<-subset(p,Neuron %in% neurons[19:36])
 p3<-subset(p,Neuron %in% neurons[37:n.neurons])
 #p4<-subset(p,Neuron %in% neurons[46:n.neurons])
-qplot(head_peak,maxsdf*1400,data=p1)+
-  facet_wrap(~Neuron,ncol=3)+
-  ylab('Peak Firing Rate (spikes/s)')+
-  xlab('Peak Head Velocity (deg/s)')
-qplot(head_peak,maxsdf*1400,data=p2)+
-  facet_wrap(~Neuron,ncol=3)+
-  ylab('Peak Firing Rate (spikes/s)')+
-  xlab('Peak Head Velocity (deg/s)')
-qplot(head_peak,maxsdf*1400,data=p3)+
-  facet_wrap(~Neuron,ncol=3)+
-  ylab('Peak Firing Rate (spikes/s)')+
-  xlab('Peak Head Velocity (deg/s)')
+#qplot(head_peak,maxsdf,data=p1)+
+#  facet_wrap(~Neuron,ncol=3)+
+#  ylab('Peak Firing Rate (spikes/s)')+
+#  xlab('Peak Head Velocity (deg/s)')
+#qplot(head_peak,maxsdf,data=p2)+
+#  facet_wrap(~Neuron,ncol=3)+
+#  ylab('Peak Firing Rate (spikes/s)')+
+#  xlab('Peak Head Velocity (deg/s)')
+#qplot(head_peak,maxsdf,data=p3)+
+#  facet_wrap(~Neuron,ncol=3)+
+#  ylab('Peak Firing Rate (spikes/s)')+
+#  xlab('Peak Head Velocity (deg/s)')
 #qplot(head_peak,maxsdf*1400,data=p4)+
 #  facet_wrap(~Neuron,ncol=3)+
 #  ylab('Peak Firing Rate (spikes/s)')+
@@ -161,4 +238,12 @@ kable(tpeak[,1:length(t)-1],digits=3,align='l')
 tab<-xtable(d[,1:4],caption='This table shows the results of a step-wise fitting procedure that with a threshold for inclusion of an increase of 0.5 in the R2')
 #print(tab,comment=FALSE)
 kable(d[,1:4],digits=2,align='l')
+```
+
+```{r gspsfull,fig.width=9, fig.height=30}
+qplot(head_peak,maxsdf,color=Task,alpha=I(0.5),data=p)+
+  facet_wrap(~Neuron,ncol=3)+
+  ylab('Peak Firing Rate (spikes/s)')+
+  xlab('Peak Head Velocity (deg/s)')+
+  theme(legend.position='bottom')
 ```
