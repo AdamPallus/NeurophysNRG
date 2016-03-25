@@ -13,7 +13,7 @@ r=recalculatevels(r);
 r.goSignal=r.gosig;
 figure
 if sameaxes
-subplot(2,1,1)
+    subplot(2,1,1)
 else
     subplot(3,1,1)
 end
@@ -26,9 +26,9 @@ mhv=plotsub(r.headvelocities,r.goSignal-preplot,plotlength);
 mev=plotsub(r.eyevelocities,r.goSignal-preplot,plotlength);
 
 plotribbon(mh,'k',0.2);
-plotribbon(me,'k',0.2);
+plotribbon(me,'b',0.2);
 plot(nanmean(mh),'k','linewidth',2)
-plot(nanmean(me),'color',[0.5,0.5,0.5],'linewidth',2)
+plot(nanmean(me),'color','b','linewidth',2)
 %velocity
 if ~sameaxes
     xlim(xlimits)
@@ -42,9 +42,9 @@ else
 end
 
 plotribbon(mhv,'k',0.2);
-plotribbon(mev,'k',0.2);
+plotribbon(mev,'b',0.2);
 plot(nanmean(mhv),'k','linewidth',2)
-plot(nanmean(mev,1),'color',[0.5,0.5,0.5],'linewidth',2)
+plot(nanmean(mev,1),'color','b','linewidth',2)
 xlim(xlimits)
 ylabel('Velocity (deg/s)')
 
@@ -57,9 +57,9 @@ hold on
 sdf=plotsub(r.sdf,r.goSignal-preplot,plotlength);
 predict=plotsub(r.prediction,r.goSignal-preplot,plotlength);
 plotribbon(sdf,'k',0.2)
-plotribbon(predict,'k',0.2)
+plotribbon(predict,'r',0.2)
 plot(nanmean(sdf),'k','linewidth',2)
-plot(nanmean(predict),'color',[0.5,0.5,0.5],'linewidth',2)
+plot(nanmean(predict),'color','r','linewidth',2)
 
 xlim(xlimits)
 ylim([0 300])

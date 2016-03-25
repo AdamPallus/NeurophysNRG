@@ -1,0 +1,100 @@
+---
+title: "Exploring the Relative Importance of Parameters when Modeling NRG Firing Rates"
+author: "Adam"
+date: "March 23, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r load.data, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(stringr)
+library(relaimpo)
+
+r<-readRDS('allRelImpoSplit.RDS')
+
+r %>% 
+  group_by(neuron) %>%
+  mutate(EyePosition=max(eye,eyeL),
+         HeadPosition=max(head,headL),
+         EyeVelocity=max(ev,evL),
+         HeadVelocity=max(hv,hvL),
+         EyeAcceleration=max(ea,eaL),
+         HeadAcceleration=max(ha,haL)) %>%
+  ungroup() %>%
+  mutate(monkey=substring(neuron,1,1)) %>%
+  group_by(monkey) %>%
+  mutate(cell=paste(monkey,row_number(),sep='-')) ->
+  r
+```
+
+We report the activity of 53 neurons recorded in the NRG, near areas that produce horizontal head rotation when stimulated. The cells were collected from two monkeys, with 32 from monkey S and 20 from monkey U.
+
+In this analysis, we used multiple linear regression modeling to predict the firing rate of each neuron based on the recorded movements of the eyes and head. Specifically, the position, velocity and acceleration of the eyes and head. Because it is apparent that many cells have a significant direction bias, we further split each variable into leftward and rightward movements. This gives 12 parameters: left/right, eye/head, position/velocity/acceleration. 
+
+We calculate the dynamic lead time of the neuron relative to the movements by choosing a lead time that produces the best fit from 10-150ms. 
+
+There are many statistical methods to determine which parameters should be included to produce the best model. Adding terms can never cause the fit to be worse, so additional measures are needed to determine whether a simpler model is more appropriate. One method is to use a stepwise fitting algorithm that uses a chosen statistical threshold to determine whether terms should be added or removed in a reiterative fashion. 
+
+Other measures for balancing complexity with goodness-of-fit include Bayesian information content (BIC) and adjusted $R^2$. For our purposes, we are not interested in determining the ideal model to predict the firing rate of these neurons. Instead, we want to know which of these parameters are important, and which are the most important.
+
+For these reasons, we employ a measure of relative importance, using the LMG method (named for the authors) implemented in the *relaimpo* package for R. Using this metric, we can see whether one or more terms are more important than others without making a determination about which should be included. 
+
+##Overall Goodness of Fit
+First, we show the $R^2$ values obtained by the multiple linear regression including all terms taking into account the lead time of the cell's activity. For each animal, the model accounted for an average of 25% of the variability observed.
+
+```{r goodness,fig.width=10}
+qplot(R2,data=r,bins=10)+facet_wrap(~monkey)+geom_vline(aes(xintercept=mean(R2)),color='red',size=2)
+```
+
+##Direction Preference for head velocity.
+The majority of cells show a clear bias for movements in one direction. This figure shows the relative importance of leftward versus rightward head velocity. Notice that in monkey S (top panel), there is a continuous range of relative importance for head velocity, as well as a clear distinction between leftward and rightward cells. 
+
+```{r left.vs.right.Head,fig.width=10,fig.height=12}
+
+ggplot(aes(hv,hvL),data=r)+geom_point(size=2)+
+  geom_abline(slope=1)+
+  geom_text(aes(label=neuron),check_overlap=T)+
+  facet_wrap(~monkey,ncol=1)+
+  xlab('Importance of Rightward Head Velocity')+
+  ylab('Importance of Leftward Head')
+
+```
+Cells from monkey U (bottom  panel) also show a range of relative importance, but also show a few cells for which head movements in both direction are important. This is consistent with observation. The majority of cells show a clear direction bias, but not all. We considered that some of these cells may fire with longer latency as part of the deceleration during off-direction movements, but this does not explain the behavior of all cells. Below, we plot the same figure as before, this time with the relative importance of head acceleration indicated by the size of the points. Head acceleration was not the most important parameter for any cell in our dataset and was minimal in the majority of cells. 
+
+```{r braking.pulse, fig.width=10,fig.height=12}
+ggplot(aes(hv,hvL),data=r)+geom_point(aes(size=HeadAcceleration))+
+geom_abline(slope=1)+
+geom_text(aes(label=neuron),check_overlap=T)+
+facet_wrap(~monkey,ncol=1)+
+xlab('Importance of Rightward Head Velocity')+
+ylab('Importance of Leftward Head')
+
+```
+
+##Importance of Head Velocity and Eye Position
+We were intentionally looking for cells with activity related to head movement. The majority of cells appeared to have activity related to head velocity. The relative importance supported this. In the following figure, we show the relative importance of head velocity versus eye position. After careful analysis, some cells appeared to have activity clearly related to eye position.
+
+```{r Eye.and.Head,fig.width=10,fig.height=12}
+ggplot(aes(HeadVelocity,EyePosition),data=r)+geom_point(size=2)+
+  geom_abline(slope=1)+
+  geom_text(aes(label=neuron),check_overlap=T)+
+  facet_wrap(~monkey,ncol=1)
+```
+
+```{r full.plots}
+
+rimp<-readRDS('relimpoplots.RDS')
+r <- data.frame()
+r2 <- NULL
+
+for (i in 1:nrow(rimp)){
+  plot(rimp$b[[i]], main=rimp$neuron[i])
+}
+
+```
+

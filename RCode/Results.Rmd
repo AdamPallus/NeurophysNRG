@@ -49,6 +49,16 @@ pp<-merge(p,mm,by='Neuron')
 n.total<-length(unique(pp$Neuron))
 
 ```
+#Methods Exerpt 
+
+###Neurophysiology
+Single neurons in NRG were isolated using a tungsten micro-electrode (Micro Probes), amplified, filtered and saved for offline analysis. The anterior/posterior position of the electrode in the chamber was chosen using the characteristic firing pattern of the abducens motor nucleus as a landmark. We close electrode tracts that traveled posterior to the nucleus to avoid damaging motor neurons, and continued deeper. On most tracts, the characteristic population bursting for ipsiversive gaze shifts of PPRF was noted, as well as occasional MLBs and LLBNs. Once the electrode was advanced beyond the level of population gaze-shift-related activity, we also characterized the location's response to micro-stimulation. We sought regions that produced horizontal head rotation on stimulation, using the stimulation parameters of Quessy and Freedman (2004) as a guide. Superficial to this region, we observed evoked ear movements as well as head movements with vertical or roll components. Any neurons isolated deep to the level of population gaze activity were recorded as a candidate for inclusion in this study. 
+
+###Modeling
+We are attempting to find a function of the recorded eye and head movements that will predict the firing rate of the neuron during the trial. We convert the recorded spike times into a continuous function by convolving them with a Gaussian with a 15ms standard deviation to create a spike density function. We scale the spike density function so that it approximates the firing rate in spikes per second. For this analysis, we separate leftward and rightward movements to produce 12 possible predictor variables: (right/left)(eye/head)(position/velocity/acceleration), represented by the abbreviations: *rhp, lhp, rep, lep, rhv, lhv, rev, lev, rha, lha, rea* and *lea*. 
+
+We use Matlab’s **stepwiselm** function, beginning with a constant model. The function evaluates the set of available terms, which includes the predictor variables described above, as well as pairwise interactions. If any of these terms improve the R^2^ of the model by 0.05 or more, the threshold criterion we chose, it includes the best term and then repeats the evaluation to see if any other terms could improve the model further. If these neurons were involved in generating the observed eye and head behavior, we assume that there would be a time delay between neural activity and movement. We repeated this step-wise model fitting to shifted data, in 10ms increments up to 200ms. We employed step wise fitting method to find the best fit at each location independently. We then chose the delay that gave the best fit, determined by the R^2^ weighted by the number of terms in the model. Each additional term must improve the fit by at least 0.05. For example, if the best fit at a 50ms delay was a model with two terms an R^2^ of 0.29, and the best fit at 60ms was a model with three terms and an R^2^ of 0.30, we chose the simpler model.
+
 
 #Results
 We isolated 163 neurons (94 from S and 69 from U) in our target region while monkeys performed head-unrestrained gaze shifts and gaze pursuit tasks. This report includes a detailed analysis of 51 of these neurons,  chosen based on apparent task-related activity while the monkey completion of at least 30 trials randomly selected from our two task types.
@@ -99,7 +109,7 @@ qplot(y=n,x=s$c,geom='bar',stat='identity',data=s)+
 
 ```
 
-##Static Position-Related Activity
+##Factors other than Head Velocity
 From the histogram in Figure 2, it is clear that head velocity is the most important factor for predicting the firing rate of the neurons, but other terms are also included for some cells. Neither eye velocity nor acceleration are included in any models, and head acceleration is included in only one. However, there are a number of neurons with a term related to the position of the head or the positions of the eyes in the orbits. Although the best fit for three neurons included only terms related to position, the rest have position terms in addition to head velocity. We show the results of the stepwise regression modeling for the ten cells with the best fit in Table 2. Results from all neurons are shown in Supplementary Table 2.
 
 ```{r formulatable}
@@ -108,6 +118,7 @@ tab<-xtable(d[,1:4],caption='This table shows the results of a step-wise fitting
 kable(d[1:10,1:4],digits=2,align='l')
 ```
 
+###Static Position-Related Activity
 Eye and head position are often correlated, so we include an additional analysis to determine what best explains the position-related activity observed in some cells. The design of our gaze shift task required subjects to initially maintain gaze fixation on a centrally located visual target with the eyes and head in one of three horizontal configurations. After the gaze shift, subjects were required to maintain gaze fixation of the second visual target without any further requirement for eye and head position. This enables us to dissociate eye and head position during fixations. Figure 3 shows a neuron with activity related to eye position. In the left panel, notice the activity after the gaze shift while the eyes and head are both to the right. In the right panel, we dissociate eye and head position during the fixation before the gaze shift and observe similar activity while the eyes are to the right in the orbits and the head is pointed leftward, indicating the activity is related to the rightward position of the eyes. This figure also shows the prediction of the model incorporating two terms: rightward head velocity and rightward eye position. 
 
 ![ModelPositionExample](ModelDemoSB21Oct11.png)
@@ -182,7 +193,7 @@ qplot(head_peak,maxsdf,col=Task,shape=Task,alpha=I(0.5),
 
 ```
 
-When we compare the cells identified using this method with the formula that these neurons were assigned during the multiple regression analysis, we can see that 3/4 of the cells have an additional factor besides head velocity that explains what is going on. The other cell cannot be explained in this fashion, but the firing rate overall is low (<100 spikes/s) and the R^2^ of the fit for this cell is only 0.2, meaning there is plenty of room for another factor to be impacting this result that should be considered before we imagine that "task type" has a significant impact here.
+When we compare the cells identified using this method with the formula that these neurons were assigned during the multiple regression analysis, we can see that 3/4 of the cells have an additional factor besides head velocity that may explain why head velocity is insufficient to predict activity. The other cell cannot be explained in this fashion, but the firing rate overall is low (<100 spikes/s) and the R^2^ of the fit for this cell is only 0.2. 
 
 
 ```{r gspsformulae,warning=FALSE,message=FALSE}
